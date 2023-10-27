@@ -1,5 +1,4 @@
 intf_libs = # Interface dependencies.
-#import xxxx_libs += libhello%lib{hello}
 
 lib{ensketch-xstd}: {hxx ixx txx}{** -version} hxx{version} $intf_libs
 

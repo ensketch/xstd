@@ -1,0 +1,3 @@
+import libs = libensketch-xstd%lib{ensketch-xstd}
+
+exe{version}: {hxx ixx txx cxx}{**} $libs
