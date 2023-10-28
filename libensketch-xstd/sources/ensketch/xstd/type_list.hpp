@@ -433,4 +433,26 @@ consteval auto transform(type_list<types...>, auto f) {
   return (f.template operator()<types>() + ...);
 }
 
+///
+/// Algorithms
+///
+
+///
+///
+template <typename... types>
+constexpr auto for_each(type_list<types...>, auto f) {
+  (f.template operator()<types>(), ...);
+}
+
+///
+///
+constexpr auto for_each_until(instance::type_list auto list, auto f) {
+  if constexpr (empty(list))
+    return false;
+  else {
+    if (f.template operator()<decltype(front(list))>()) return true;
+    return for_each_until(--list, std::forward<decltype(f)>(f));
+  }
+}
+
 }  // namespace ensketch::xstd
