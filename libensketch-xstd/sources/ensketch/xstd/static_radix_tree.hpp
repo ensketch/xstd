@@ -4,7 +4,7 @@
 
 namespace ensketch::xstd {
 
-namespace static_radix_tree {
+namespace detail::static_radix_tree {
 
 // A tree is typically defined as a recursive data structure.
 // So, we would like to offer recursive constraints and concepts.
@@ -68,6 +68,10 @@ struct node {
 ///
 template <static_zstring str, instance::node_list children = node_list<>>
 using leaf = node<str, children, true>;
+
+consteval auto children(instance::node auto root) {
+  return typename decltype(root)::children{};
+}
 
 namespace detail {
 
@@ -327,6 +331,13 @@ using insertion = typename detail::insertion<root, str...>::type;
 template <static_zstring... str>
 using construction = insertion<node<"">, str...>;
 
+///
+///
+template <static_zstring... str>
+consteval auto insert(instance::node auto root) {
+  return insertion<decltype(root), str...>{};
+}
+
 /// The visit algorithm tries to match the whole string
 /// with a static string contained inside the static radix tree.
 /// If the given string is not contained in the tree,
@@ -335,9 +346,10 @@ using construction = insertion<node<"">, str...>;
 /// and calls the function object
 /// with the static string provided as template parameter.
 ///
-template <instance::node root, static_zstring prefix = "">
-constexpr bool visit(czstring str, auto&& f) {
-  // using namespace meta::type_list;
+template <static_zstring prefix = "">
+constexpr bool visit(instance::node auto r, czstring str, auto&& f) {
+  using root = decltype(r);
+
   constexpr auto new_prefix = prefix + root::string;
   const auto tail           = detail::prefix_match<root::string>(str);
   if (!tail) return false;
@@ -350,7 +362,7 @@ constexpr bool visit(czstring str, auto&& f) {
     if (!*tail) return false;
   }
   return for_each_until(typename root::children{}, [&]<instance::node child> {
-    return visit<child, new_prefix>(tail, f);
+    return visit<new_prefix>(child{}, tail, f);
   });
 }
 
@@ -361,15 +373,16 @@ constexpr bool visit(czstring str, auto&& f) {
 /// If a prefix can be matched, the function object is called
 /// with the static prefix and the dynamic tail.
 ///
-template <instance::node root, static_zstring prefix = "">
-constexpr bool traverse(czstring str, auto&& f) {
-  // using namespace meta::type_list;
+template <static_zstring prefix = "">
+constexpr bool traverse(instance::node auto r, czstring str, auto&& f) {
+  using root = decltype(r);
+
   const auto tail = detail::prefix_match<root::string>(str);
   if (tail) {
     constexpr auto new_prefix = prefix + root::string;
     const auto found =
         for_each_until(typename root::children{}, [&]<instance::node child> {
-          return traverse<child, new_prefix>(tail, f);
+          return traverse<new_prefix>(child{}, tail, f);
         });
     if constexpr (root::is_leaf) {
       if (!found)
@@ -381,6 +394,94 @@ constexpr bool traverse(czstring str, auto&& f) {
     return false;
 }
 
-}  // namespace static_radix_tree
+}  // namespace detail::static_radix_tree
+
+///
+///
+template <detail::static_radix_tree::instance::node node =
+              detail::static_radix_tree::node<"">>
+struct static_radix_tree {
+  using root = node;
+
+  constexpr static_radix_tree() noexcept = default;
+  constexpr static_radix_tree(root) noexcept {}
+};
+
+// template <instance::node root>
+// static_radix_tree(roo);
+
+namespace detail {
+template <typename type>
+struct is_static_radix_tree : std::false_type {};
+template <typename type>
+struct is_static_radix_tree<xstd::static_radix_tree<type>> : std::true_type {};
+}  // namespace detail
+
+namespace instance {
+
+template <typename type>
+concept static_radix_tree = detail::is_static_radix_tree<type>::value;
+
+}  // namespace instance
+
+///
+/// Ordering
+///
+
+/// Check whether two instances of 'static_radix_tree' are the same.
+///
+consteval auto operator==(instance::static_radix_tree auto x,
+                          instance::static_radix_tree auto y) {
+  return false;
+}
+//
+template <instance::static_radix_tree tree>
+consteval auto operator==(tree, tree) {
+  return true;
+}
+
+/// Check whether two instances of 'static_radix_tree' are not the same.
+///
+consteval auto operator!=(instance::static_radix_tree auto x,
+                          instance::static_radix_tree auto y) {
+  return !(x == y);
+}
+
+///
+/// Accessors
+///
+
+consteval auto root(instance::static_radix_tree auto tree) {
+  return typename decltype(tree)::root{};
+}
+
+///
+/// Modifiers
+///
+
+template <static_zstring... str>
+consteval auto insert(instance::static_radix_tree auto tree) {
+  return static_radix_tree{insert<str...>(root(tree))};
+}
+
+///
+/// Algorithms
+///
+
+///
+///
+constexpr auto visit(instance::static_radix_tree auto tree,
+                     czstring str,
+                     auto&& f) {
+  return visit(root(tree), str, std::forward<decltype(f)>(f));
+}
+
+///
+///
+constexpr auto traverse(instance::static_radix_tree auto tree,
+                        czstring str,
+                        auto&& f) {
+  return traverse(root(tree), str, std::forward<decltype(f)>(f));
+}
 
 }  // namespace ensketch::xstd
