@@ -91,7 +91,7 @@ using reduction = std::decay_t<type>;
 /// and checks whether two given types are equal.
 ///
 template <typename x, typename y>
-using equal = std::same_as<x, y>;
+constexpr bool equal = std::same_as<x, y>;
 
 /// This function checks whether two provided values are
 /// strictly equal, meaning their type and values coincide.
