@@ -465,6 +465,13 @@ consteval auto insert(instance::static_radix_tree auto tree) {
 }
 
 ///
+///
+template <static_zstring... str>
+consteval auto static_radix_tree_from() {
+  return insert<str...>(static_radix_tree<>{});
+}
+
+///
 /// Algorithms
 ///
 
