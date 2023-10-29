@@ -6,47 +6,50 @@ namespace ensketch::xstd {
 
 namespace detail::static_radix_tree {
 
+namespace detail {
+
 // A tree is typically defined as a recursive data structure.
 // So, we would like to offer recursive constraints and concepts.
 // For this, we pre-declare the template predicate which decides
 // whether a given type is a node of a static radix tree.
 //
-namespace detail {
-template <typename T>
+template <typename type>
 struct is_node;
-}
 
-/// Alias Type Function to check
-/// whether the type is an instance of the 'node' template.
+}  // namespace detail
+
+/// This type function checks whether the given
+/// type is an instance of the 'node' template.
 ///
-template <typename T>
-constexpr bool is_node = detail::is_node<T>::value;
+template <typename type>
+constexpr bool is_node = detail::is_node<type>::value;
 
-/// Check if all types inside a given type list
-/// are instances of the node template.
+/// This type function checks whether a given type
+/// is an instance of 'type_list' and all contained types
+/// are instances of the 'node' template.
+///
 template <typename list>
 constexpr bool is_node_list =
     instance::type_list<list> &&
     for_all(list{}, []<typename type> { return is_node<type>; });
 
-// Further alias concepts for node instances and node list instances.
-//
 namespace instance {
 
-/// This concepts checks whether a given type is an instance of 'node'.
+/// This concept checks whether a given type is an instance of 'node'.
 ///
 template <typename T>
 concept node = is_node<T>;
 
-/// This concept checks whether a given type is a list of nodes.
+/// This concept checks whether a given type is a 'type_list' instance
+/// such that all contained types are instances of the 'node' template.
 ///
 template <typename list>
 concept node_list = is_node_list<list>;
 
 }  // namespace instance
 
-/// A node list is a type list which contains
-/// only instances of the 'node' template.
+/// A node list is a 'type_list' instance that
+/// contains only instances of the 'node' template.
 ///
 template <instance::node... nodes>
 using node_list = type_list<nodes...>;
@@ -63,14 +66,74 @@ struct node {
   static constexpr bool is_leaf          = leaf;
 };
 
-/// The leaf is an alias to the node template.
+/// 'leaf' is an alias to the 'node' template.
 /// It is used to simplify marking nodes as leaves.
 ///
 template <static_zstring str, instance::node_list children = node_list<>>
 using leaf = node<str, children, true>;
 
+///
+///
+template <static_zstring str, bool is_leaf = false>
+consteval auto node_from(instance::node_list auto nodes) {
+  return node<str, decltype(nodes), is_leaf>{};
+}
+
+///
+///
+template <static_zstring str>
+consteval auto leaf_from(instance::node_list auto nodes) {
+  return node_from<str, true>(nodes);
+}
+
+///
+///
+template <instance::node... nodes>
+consteval auto node_list_from(nodes...) {
+  return node_list<nodes...>{};
+}
+
+///
+/// Ordering
+///
+
+// We need to provide a total order for nodes based on their strings.
+// So, the static radix tree will be unique when new strings are inserted.
+// But by definition and construction of the radix tree,
+// it suffices to compare the first characters of two given strings.
+//
+// To establish a total order for nodes based on their strings,
+// we compare the first characters of the strings, ensuring uniqueness
+// when new strings are inserted into the static radix tree.
+//
+// template <instance::node p, instance::node q>
+// struct node_order {
+//   static constexpr bool value = p::string[0] <= q::string[0];
+// };
+constexpr auto node_order = []<instance::node p, instance::node q> {
+  return p::string[0] <= q::string[0];
+};
+
+///
+/// Accessors
+///
+
+///
+///
+consteval auto prefix(instance::node auto root) {
+  return decltype(root)::string;
+}
+
+///
+///
 consteval auto children(instance::node auto root) {
   return typename decltype(root)::children{};
+}
+
+///
+///
+consteval auto is_leaf(instance::node auto root) {
+  return decltype(root)::is_leaf;
 }
 
 namespace detail {
@@ -87,20 +150,6 @@ struct is_node<node<str, children, is_leaf>> : std::true_type {};
 // Therefore we make the appropriate namespace available
 // inside this implementation namespace.
 // using namespace meta::type_list;
-
-// We need to provide a total order for nodes based on their strings.
-// So, the static radix tree will be unique when new strings are inserted.
-// But by definition and construction of the radix tree,
-// it suffices to compare the first characters of two given strings.
-//
-// To establish a total order for nodes based on their strings,
-// we compare the first characters of the strings, ensuring uniqueness
-// when new strings are inserted into the static radix tree.
-//
-template <instance::node p, instance::node q>
-struct node_order {
-  static constexpr bool value = p::string[0] <= q::string[0];
-};
 
 // The basic insertion shall insert a
 // single string into the given radix tree.
@@ -217,11 +266,12 @@ struct basic_insertion_implementation<root, str, index> {
   // If order would not be of importance, this line could be used.
   // using type = node<prefix<index>(str), node_list<first, second>>;
   // using children = insert_when<node_list<first>, second, node_order>;
-  using children =
-      decltype(insert<second>(node_list<first>{}, []<typename x, typename y> {
-        return node_order<x, y>::value;
-      }));
-  using type = node<prefix<index>(str), children>;
+  // using children =
+  //     decltype(insert<second>(node_list<first>{}, []<typename x, typename y> {
+  //       return node_order<x, y>::value;
+  //     }));
+  using children = decltype(insert<second>(node_list<first>{}, node_order));
+  using type     = node<prefix<index>(str), children>;
 };
 
 // Node Match
@@ -273,9 +323,11 @@ struct node_match_implementation {
   // using new_children = push_back<typename root::children, new_node>;
   // using new_children =
   //     insert_when<typename root::children, new_node, node_order>;
-  using new_children = decltype(insert<new_node>(
-      typename root::children{},
-      []<typename x, typename y> { return node_order<x, y>::value; }));
+  // using new_children = decltype(insert<new_node>(
+  //     typename root::children{},
+  //     []<typename x, typename y> { return node_order<x, y>::value; }));
+  using new_children =
+      decltype(insert<new_node>(typename root::children{}, node_order));
 
   using type = node<root::string, new_children, root::is_leaf>;
 };
@@ -302,6 +354,8 @@ struct node_match_implementation<root, str, index, true> {
   using type = node<root::string, new_children, root::is_leaf>;
 };
 
+}  // namespace detail
+
 // The prefix match tries to match a static prefix
 // given as template parameter in a given dynamic string.
 // Using compiler optimization concerning the inlining of constexpr functions,
@@ -319,7 +373,135 @@ constexpr auto prefix_match(czstring str) noexcept -> czstring {
   }
 }
 
-}  // namespace detail
+// No Match
+// In this case, the insertion should not change the given node at all.
+//
+template <static_zstring str, size_t index>
+consteval auto basic_insert_implementation(instance::node auto root)
+  requires(!prefix(root).empty()) && (index == 0)
+{
+  return root;
+}
+//
+// Full Match
+// In this case, the path and node already exist inside the tree.
+// The node may not be marked as a leaf.
+// So, we have to make it a leaf and leave the rest as it is.
+// The full match is therefore a projection and
+// makes sure that a given string can only be inserted once.
+//
+template <static_zstring str, size_t index>
+consteval auto basic_insert_implementation(instance::node auto root)
+  requires(index == prefix(root).size()) && (index == str.size())
+{
+  return leaf<prefix(root), decltype(children(root))>{};
+  // return auto_leaf<prefix(root)>(children(root));
+}
+//
+// String Match
+// In this case, the current node needs to be split.
+// The new node will be a leaf with the prefix as its string.
+// The old node with its children will be the child of the new node.
+// Hereby, the string of the old node will be changed to the tail.
+//
+template <static_zstring str, size_t index>
+consteval auto basic_insert_implementation(instance::node auto root)
+  requires(index < prefix(root).size()) && (index == str.size())
+{
+  using split =
+      node<tail<index>(prefix(root)), decltype(children(root)), is_leaf(root)>;
+  return leaf<str, node_list<split>>{};
+}
+//
+// Partial Match
+// In this case, the current node needs to be split.
+// It will provide two children.
+// One with its former children and the tail of the node string.
+// The other node will provide no children and the tail of the string.
+// The new node itself is no leaf.
+//
+// At this point, the order of the insertion is important,
+// if lexicographical order in the radix tree is of interest.
+//
+template <static_zstring str, size_t index>
+consteval auto basic_insert_implementation(instance::node auto root)
+  requires(index > 0) && (index < prefix(root).size()) && (index < str.size())
+{
+  using first =
+      node<tail<index>(prefix(root)), decltype(children(root)), is_leaf(root)>;
+  using second   = leaf<tail<index>(str)>;
+  using children = decltype(insert<second>(node_list<first>{}, node_order));
+  return node<prefix<index>(str), children>{};
+}
+//
+// Checking if any of the node children matches a prefix of a given string
+// can be simply done by checking the first character
+// in addition with some syntax for variadic templates.
+//
+template <static_zstring str, instance::node... nodes>
+consteval bool match_exists(node_list<nodes...>) {
+  return ((str[0] == nodes::string[0]) || ...);
+}
+//
+// If no children matches any prefix,
+// the given string will be inserted as a new leaf with no children
+// into the current children list of the given node.
+//
+// At this point, the order of the insertion is important,
+// if lexicographical order in the radix tree is of interest.
+//
+template <static_zstring str, size_t index, bool matched>
+  requires(!matched)
+consteval auto node_match(instance::node auto root) {
+  using new_node     = leaf<tail<index>(str)>;
+  using new_children = decltype(insert<new_node>(children(root), node_order));
+  return node<prefix(root), new_children, is_leaf(root)>{};
+}
+//
+// When there is a child of the current node
+// which matches a prefix of the given string
+// then by construction of the radix tree
+// this node has to be unique.
+// In such a case, we syntactically insert the given string into all children
+// by recursively calling the basic insertion function
+// together with the type list transformation algorithm,
+// knowing that all children that do not match any prefix
+// will not be changed by this transformation.
+//
+template <static_zstring str, size_t index, bool matched>
+  requires(matched)
+consteval auto node_match(instance::node auto root) {
+  using new_children = decltype(transform(children(root), []<typename x> {
+    return node_list<decltype(basic_insert<tail<index>(str)>(x{}))>{};
+  }));
+  return node<prefix(root), new_children, is_leaf(root)>{};
+}
+//
+// Node Match
+// This case is a little bit more complex.
+// Because the node was fully matched,
+// the given string tail needs to be forwarded to its children.
+// If no children matches a prefix with the tail,
+// a new node has to be inserted into the children of the current node.
+// In the other case, we can finally recursively call the basic insertion.
+//
+template <static_zstring str, size_t index>
+consteval auto basic_insert_implementation(instance::node auto root)
+  requires(index == prefix(root).size()) && (index < str.size())
+{
+  constexpr bool matched = match_exists<tail<index>(str)>(children(root));
+  // using type =
+  //     typename node_match_implementation<root, str, index, matched>::type;
+  return node_match<str, index, matched>(root);
+}
+
+///
+///
+template <static_zstring str>
+consteval auto basic_insert(instance::node auto root) {
+  constexpr auto index = prefix_match_index(prefix(root), str);
+  return basic_insert_implementation<str, index>(root);
+}
 
 /// Non-member type function to insert an arbitrary amount of static strings
 /// into a given static radix tree.
@@ -334,8 +516,14 @@ using construction = insertion<node<"">, str...>;
 ///
 ///
 template <static_zstring... str>
+  requires(sizeof...(str) == 0)
 consteval auto insert(instance::node auto root) {
-  return insertion<decltype(root), str...>{};
+  return root;
+}
+//
+template <static_zstring str, static_zstring... tail>
+consteval auto insert(instance::node auto root) {
+  return insert<tail...>(basic_insert<str>(root));
 }
 
 /// The visit algorithm tries to match the whole string
@@ -351,7 +539,7 @@ constexpr bool visit(instance::node auto r, czstring str, auto&& f) {
   using root = decltype(r);
 
   constexpr auto new_prefix = prefix + root::string;
-  const auto tail           = detail::prefix_match<root::string>(str);
+  const auto tail           = prefix_match<root::string>(str);
   if (!tail) return false;
   if constexpr (root::is_leaf) {
     if (!*tail) {
@@ -377,7 +565,7 @@ template <static_zstring prefix = "">
 constexpr bool traverse(instance::node auto r, czstring str, auto&& f) {
   using root = decltype(r);
 
-  const auto tail = detail::prefix_match<root::string>(str);
+  const auto tail = prefix_match<root::string>(str);
   if (tail) {
     constexpr auto new_prefix = prefix + root::string;
     const auto found =
@@ -406,9 +594,6 @@ struct static_radix_tree {
   constexpr static_radix_tree() noexcept = default;
   constexpr static_radix_tree(root) noexcept {}
 };
-
-// template <instance::node root>
-// static_radix_tree(roo);
 
 namespace detail {
 template <typename type>
