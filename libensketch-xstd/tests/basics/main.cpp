@@ -81,7 +81,7 @@ using namespace std;
 
 template <detail::static_radix_tree::instance::node root, static_zstring prefix>
 constexpr void print() {
-  constexpr auto str = prefix + '|' + root::string;
+  constexpr auto str = prefix + '|' + root::prefix;
   for_each(typename root::children{},
            [&]<typename child> { print<child, str>(); });
   if constexpr (root::is_leaf) cout << '"' << str << '"' << endl;
@@ -90,9 +90,9 @@ constexpr void print() {
 constexpr void print(instance::static_radix_tree auto t) {
   using tree = decltype(t);
   for_each(children(root(tree{})),
-           [&]<typename child> { print<child, tree::root::string>(); });
+           [&]<typename child> { print<child, tree::root::prefix>(); });
   if constexpr (tree::root::is_leaf)
-    cout << '"' << tree::root::string << '"' << endl;
+    cout << '"' << tree::root::prefix << '"' << endl;
 }
 
 inline void print_visit(instance::static_radix_tree auto tree, czstring cstr) {
