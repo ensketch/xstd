@@ -3,7 +3,14 @@
 
 namespace ensketch::xstd {
 
-///
+/// Instances of the 'static_radix_tree' template
+/// are tag types that represent a radix tree.
+/// Each instance provides access to the root of the tree.
+/// A static radix tree must be constructed at compile time
+/// and cannot change during runtime.
+/// However, by using algorithms 'visit' and 'traverse',
+/// it is possible to check at runtime whether a dynamic string
+/// is fully contained or a prefix matches inside the radix tree.
 ///
 template <detail::static_radix_tree::instance::node node =
               detail::static_radix_tree::node<"">>
@@ -11,6 +18,9 @@ struct static_radix_tree {
   using root = node;
 
   constexpr static_radix_tree() noexcept = default;
+
+  // This constructor allows for CTAD.
+  //
   constexpr static_radix_tree(root) noexcept {}
 };
 
@@ -27,6 +37,17 @@ template <typename type>
 concept static_radix_tree = detail::is_static_radix_tree<type>::value;
 
 }  // namespace instance
+
+///
+/// Constructor Extensions
+///
+
+///
+///
+template <static_zstring... str>
+consteval auto static_radix_tree_from() {
+  return insert<str...>(static_radix_tree<>{});
+}
 
 ///
 /// Ordering
@@ -66,13 +87,6 @@ consteval auto root(instance::static_radix_tree auto tree) {
 template <static_zstring... str>
 consteval auto insert(instance::static_radix_tree auto tree) {
   return static_radix_tree{insert<str...>(root(tree))};
-}
-
-///
-///
-template <static_zstring... str>
-consteval auto static_radix_tree_from() {
-  return insert<str...>(static_radix_tree<>{});
 }
 
 ///

@@ -137,6 +137,11 @@ concept reducible = identical<reduction<x>, y>;
 template <typename x>
 concept irreducible = reducible<x, x>;
 
+/// This concepts checks whether a given type is a tag type, i.e. an empty type.
+///
+template <typename type>
+concept tag = std::is_empty_v<type>;
+
 }  // namespace generic
 
 // This namespace is used for concepts, that check whether a
