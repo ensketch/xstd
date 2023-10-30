@@ -98,6 +98,11 @@ consteval auto exists(value_list<values...>, auto f) {
 /// Check whether a given value is contained
 /// inside a given 'value_list' instance.
 ///
+template <auto value>
+consteval bool contains(instance::value_list auto list) {
+  return exists(list, []<auto x> { return meta::strict_equal(x, value); });
+}
+
 consteval auto contains(instance::value_list auto list, auto value) {
   return exists(list, [value]<auto x> { return meta::strict_equal(x, value); });
 }
@@ -110,6 +115,18 @@ consteval auto contains(auto value) {
 
 consteval auto operator|(auto list, auto f) {
   return f(list);
+}
+
+///
+///
+consteval bool is_set(value_list<>) {
+  return true;
+}
+//
+template <auto x, auto... values>
+consteval bool is_set(value_list<x, values...>) {
+  constexpr auto tail = value_list<values...>{};
+  return !contains<x>(tail) && is_set(tail);
 }
 
 ///

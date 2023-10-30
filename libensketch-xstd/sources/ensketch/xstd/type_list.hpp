@@ -115,6 +115,18 @@ consteval auto contains(instance::type_list auto list, type_list<type>) {
 }
 
 ///
+///
+consteval bool is_set(type_list<>) {
+  return true;
+}
+//
+template <typename type, typename... types>
+consteval bool is_set(type_list<type, types...>) {
+  constexpr auto tail = type_list<types...>{};
+  return !contains<type>(tail) && is_set(tail);
+}
+
+///
 /// Accessors
 ///
 

@@ -68,6 +68,17 @@ static_assert((value_list<-1, 'c'>{} | ensketch::xstd::contains(-1)));
 static_assert((value_list<-1, 'c'>{} | ensketch::xstd::contains('c')));
 static_assert(!(value_list<-1, 'c'>{} | ensketch::xstd::contains(2u)));
 
+// Check whether the given value list is a set
+//
+static_assert(is_set(value_list<>{}));
+static_assert(is_set(value_list<-1>{}));
+static_assert(is_set(value_list<'c'>{}));
+//
+static_assert(is_set(value_list<-1, 'c'>{}));
+static_assert(is_set(value_list<'c', -1>{}));
+static_assert(!is_set(value_list<'c', 'c'>{}));
+static_assert(!is_set(value_list<-1, -1>{}));
+
 // Access values of a 'value_list' instance by their index.
 //
 static_assert(element<0>(value_list<-1>{}) == -1);
