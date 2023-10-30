@@ -27,6 +27,25 @@ concept static_index_list = detail::is_static_index_list<T>::value;
 }  // namespace instance
 
 ///
+/// Constructor Extensions
+///
+
+///
+///
+template <size_t size, size_t offset = 0>
+  requires(size == 0)
+consteval auto static_index_list_from_iota() {
+  return static_index_list<>{};
+}
+//
+template <size_t size, size_t offset = 0>
+  requires(size > 0)
+consteval auto static_index_list_from_iota() {
+  return static_index_list<offset>{} +
+         static_index_list_from_iota<size - 1, offset + 1>();
+}
+
+///
 /// Predicates
 ///
 
