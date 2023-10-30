@@ -155,6 +155,20 @@ consteval auto element(size_t index) {
   };
 }
 
+///
+///
+///
+///
+template <auto value>
+consteval auto index(instance::value_list auto list) -> size_t
+  requires(!empty(list)) && (is_set(list)) && (contains<value>(list))
+{
+  if constexpr (meta::strict_equal(value, front(list)))
+    return 0;
+  else
+    return 1 + index<value>(--list);
+}
+
 /// Access the first element of a 'value_list' instance.
 ///
 consteval auto front(instance::value_list auto list)

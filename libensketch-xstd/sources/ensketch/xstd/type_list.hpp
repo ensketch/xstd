@@ -144,6 +144,18 @@ template <size_t index, typename type, typename... types>
 auto element(type_list<type, types...>) -> type
   requires(index == 0);
 
+///
+///
+template <typename type>
+consteval auto index(instance::type_list auto list) -> size_t
+  requires(!empty(list)) && (is_set(list)) && (contains<type>(list))
+{
+  if constexpr (meta::equal<type, decltype(front(list))>)
+    return 0;
+  else
+    return 1 + index<type>(--list);
+}
+
 /// Access a specific type of a 'type_list' instance by its index.
 /// The result type is wrapped by the 'type_list' template
 /// and returned as a slice of the given 'type_list' instance.

@@ -107,6 +107,11 @@ static_assert(equal<decltype(element<1>(type_list<double, int, char>{})), int>);
 static_assert(equal<decltype(element<2>(type_list<double, int, char>{})),  //
                     char>);
 
+//
+//
+static_assert(index<int>(type_list<int>{}) == 0);
+static_assert(index<int>(type_list<float, int>{}) == 1);
+
 // Access the types wrapped by a 'type_list' given their index.
 //
 static_assert(slice<0>(type_list<int>{}) == type_list<int>{});

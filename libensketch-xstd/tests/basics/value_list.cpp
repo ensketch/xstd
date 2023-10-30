@@ -89,3 +89,8 @@ static_assert(element<1>(value_list<2u, -1, 'c'>{}) == -1);
 static_assert(element<2>(value_list<2u, -1, 'c'>{}) == 'c');
 //
 // static_assert((value_list<1, 2, 3>{} | ensketch::xstd::element(0)) == 1);
+
+//
+//
+static_assert(index<-1>(value_list<-1>{}) == 0);
+static_assert(index<-1>(value_list<'c', -1>{}) == 1);
