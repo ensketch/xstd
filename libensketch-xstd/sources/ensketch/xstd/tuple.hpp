@@ -74,4 +74,19 @@ consteval auto type_list_from() {
       static_index_list_from_iota<std::tuple_size<tuple_type>::value>());
 }
 
+///
+///
+template <size_t... indices>
+constexpr auto for_each(generic::reducible_tuple auto&& tuple,
+                        auto&& f,
+                        static_index_list<indices...>) {
+  (f(get<indices>(std::forward<decltype(tuple)>(tuple))), ...);
+}
+//
+constexpr auto for_each(generic::reducible_tuple auto&& tuple, auto&& f) {
+  using tuple_type = meta::reduction<decltype(tuple)>;
+  for_each(std::forward<decltype(tuple)>(tuple), std::forward<decltype(f)>(f),
+           static_index_list_from_iota<std::tuple_size<tuple_type>::value>());
+}
+
 }  // namespace ensketch::xstd
