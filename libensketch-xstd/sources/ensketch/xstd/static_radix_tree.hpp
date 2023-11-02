@@ -1,5 +1,6 @@
 #pragma once
 #include <ensketch/xstd/detail/static_radix_tree/node.hpp>
+#include <ensketch/xstd/static_zstring_list.hpp>
 
 namespace ensketch::xstd {
 
@@ -47,6 +48,13 @@ concept static_radix_tree = detail::is_static_radix_tree<type>::value;
 template <static_zstring... str>
 consteval auto static_radix_tree_from() {
   return insert<str...>(static_radix_tree<>{});
+}
+
+///
+///
+template <static_zstring... str>
+consteval auto static_radix_tree_from(static_zstring_list<str...>) {
+  return static_radix_tree_from<str...>();
 }
 
 ///
