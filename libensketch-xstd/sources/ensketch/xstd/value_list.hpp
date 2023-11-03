@@ -268,4 +268,13 @@ consteval auto reverse() {
   };
 }
 
+///
+/// Algorithms
+///
+
+template <auto... values>
+constexpr void for_each(value_list<values...>, auto&& f) {
+  (f.template operator()<values>(), ...);
+}
+
 }  // namespace ensketch::xstd

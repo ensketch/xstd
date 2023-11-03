@@ -26,7 +26,7 @@ concept named_tuple =
 ///
 ///
 template <typename T>
-concept reducible_named_tuple = tuple<reduction<T>>;
+concept reducible_named_tuple = named_tuple<reduction<T>>;
 
 ///
 ///
@@ -203,6 +203,20 @@ constexpr decltype(auto) value(
   using type           = meta::reduction<decltype(t)>;
   constexpr auto names = type::names;
   return get<index<name>(names)>(std::forward<decltype(t)>(t).tuple());
+}
+
+template <static_zstring... names>
+constexpr void for_each(generic::reducible_named_tuple auto&& t,
+                        auto&& f,
+                        static_identifier_list<names...>) {
+  (f.template operator()<names>(value<names>(std::forward<decltype(t)>(t))),
+   ...);
+}
+
+constexpr void for_each(generic::reducible_named_tuple auto&& x, auto&& f) {
+  using tuple_type = meta::reduction<decltype(x)>;
+  for_each(std::forward<decltype(x)>(x), std::forward<decltype(f)>(f),
+           tuple_type::names);
 }
 
 /// This function is needed to make structured bindings available.
