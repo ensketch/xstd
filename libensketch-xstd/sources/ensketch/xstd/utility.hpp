@@ -14,6 +14,14 @@
 #include <cstddef>
 #include <cstdint>
 
+// Math Utilities
+//
+#include <bit>
+#include <cmath>
+#include <limits>
+#include <numbers>
+#include <numeric>
+
 // We will always make use of templates
 // Include all standard headers that deal
 // with template meta programming facilities.
@@ -33,7 +41,18 @@
 // strings are always needed.
 //
 #include <format>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
 #include <string>
+#include <string_view>
+
+// Standard Containers and Ranges
+//
+#include <algorithm>
+#include <array>
+#include <ranges>
+#include <vector>
 
 // Almost all executables and libraries will provide interactions
 // with the filesystem and reading from or writing to files.
@@ -48,6 +67,15 @@ namespace ensketch::xstd {
 //
 using float32 = float;
 using float64 = double;
+
+// Standard type for floating-point computations
+//
+using real = float32;
+
+// Provide quick standard math constants for standard floating-point type.
+//
+inline constexpr auto pi       = std::numbers::pi_v<real>;
+inline constexpr auto infinity = std::numeric_limits<real>::infinity();
 
 // Add shorter integer type definitions.
 // The suffix '_t' introduces redundancy.
