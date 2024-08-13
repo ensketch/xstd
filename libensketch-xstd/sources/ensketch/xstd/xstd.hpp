@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ensketch/xstd/meta/static_identifier_list.hpp>
+#include <ensketch/xstd/meta/name_list.hpp>
 #include <ensketch/xstd/meta/static_index_list.hpp>
 #include <ensketch/xstd/meta/static_radix_tree.hpp>
 #include <ensketch/xstd/meta/static_zstring.hpp>
