@@ -1,9 +1,10 @@
 #include <iomanip>
 #include <iostream>
 //
-#include <ensketch/xstd/static_radix_tree.hpp>
+#include <ensketch/xstd/meta/static_radix_tree.hpp>
 
-using namespace ensketch::xstd;
+using ensketch::xstd::czstring;
+using namespace ensketch::xstd::meta;
 // using ensketch::xstd::static_radix_tree;
 // namespace instance = ensketch::xstd::instance;
 

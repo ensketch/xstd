@@ -1,4 +1,4 @@
-namespace ensketch::xstd::detail::static_radix_tree {
+namespace ensketch::xstd::meta::detail::static_radix_tree {
 
 // This is the implementation of the type predicate that checks
 // whether a given type is an instance of the 'node' template.
@@ -263,4 +263,4 @@ constexpr bool traverse_implementation(instance::node auto r,
     return false;
 }
 
-}  // namespace ensketch::xstd::detail::static_radix_tree
+}  // namespace ensketch::xstd::meta::detail::static_radix_tree

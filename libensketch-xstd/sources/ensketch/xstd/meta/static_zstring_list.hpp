@@ -1,8 +1,8 @@
 #pragma once
-#include <ensketch/xstd/static_zstring.hpp>
-#include <ensketch/xstd/value_list.hpp>
+#include <ensketch/xstd/meta/static_zstring.hpp>
+#include <ensketch/xstd/meta/value_list.hpp>
 
-namespace ensketch::xstd {
+namespace ensketch::xstd::meta {
 
 /// Static zstring lists are value lists
 /// that contain only static zstrings.
@@ -34,4 +34,4 @@ concept static_zstring_list = detail::is_static_zstring_list<list>::value;
 
 }  // namespace instance
 
-}  // namespace ensketch::xstd
+}  // namespace ensketch::xstd::meta

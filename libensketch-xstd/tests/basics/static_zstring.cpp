@@ -1,6 +1,6 @@
-#include <ensketch/xstd/static_zstring.hpp>
+#include <ensketch/xstd/meta/static_zstring.hpp>
 
-using namespace ensketch::xstd;
+using namespace ensketch::xstd::meta;
 
 static_assert(substring<2, 4>("--help"_sz) == "help"_sz);
 static_assert(prefix<2>("--help"_sz) == "--"_sz);

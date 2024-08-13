@@ -1,7 +1,7 @@
 #pragma once
-#include <ensketch/xstd/static_zstring_list.hpp>
+#include <ensketch/xstd/meta/static_zstring_list.hpp>
 
-namespace ensketch::xstd {
+namespace ensketch::xstd::meta {
 
 /// Static identifier lists are value lists
 /// that contain only unique static zstrings.
@@ -28,4 +28,4 @@ concept static_identifier_list = detail::is_static_identifier_list<list>::value;
 
 }  // namespace instance
 
-}  // namespace ensketch::xstd
+}  // namespace ensketch::xstd::meta

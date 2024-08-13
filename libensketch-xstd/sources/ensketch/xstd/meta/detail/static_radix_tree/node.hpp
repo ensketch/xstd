@@ -1,8 +1,8 @@
 #pragma once
-#include <ensketch/xstd/static_zstring.hpp>
-#include <ensketch/xstd/type_list.hpp>
+#include <ensketch/xstd/meta/static_zstring.hpp>
+#include <ensketch/xstd/meta/type_list.hpp>
 
-namespace ensketch::xstd::detail::static_radix_tree {
+namespace ensketch::xstd::meta::detail::static_radix_tree {
 
 // A tree is typically defined as a recursive data structure.
 // So, we would like to offer recursive constraints and concepts.
@@ -193,6 +193,6 @@ constexpr bool traverse(instance::node auto root, czstring str, auto&& f) {
   return traverse_implementation(root, str, std::forward<decltype(f)>(f));
 }
 
-}  // namespace ensketch::xstd::detail::static_radix_tree
+}  // namespace ensketch::xstd::meta::detail::static_radix_tree
 
-#include <ensketch/xstd/detail/static_radix_tree/node.ipp>
+#include <ensketch/xstd/meta/detail/static_radix_tree/node.ipp>

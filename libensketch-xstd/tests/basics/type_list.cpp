@@ -1,16 +1,16 @@
-#include <ensketch/xstd/type_list.hpp>
+#include <ensketch/xstd/meta/type_list.hpp>
 
 // To access functions dealing with instantiations of 'type_list',
 // we use argument-dependent lookup (ADL) and simply make the template
 // itself available in the current scope.
 //
-using ensketch::xstd::type_list;
+using ensketch::xstd::meta::type_list;
 
 // For the following tests, we need to often check whether
 // a certain type is an instance of the 'type_list' template.
 // Hence, we provide a namespace alias for the 'instance' namespace.
 //
-namespace instance = ensketch::xstd::instance;
+namespace instance = ensketch::xstd::meta::instance;
 
 // To simplify the checks for type equality,
 // we make the 'equal' predicate available in the current scope.

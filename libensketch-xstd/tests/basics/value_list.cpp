@@ -1,13 +1,13 @@
-#include <ensketch/xstd/value_list.hpp>
+#include <ensketch/xstd/meta/value_list.hpp>
 
 // Only the template itself needs to be available
 // to access all its functions by making use of ADL.
 //
-using ensketch::xstd::value_list;
+using ensketch::xstd::meta::value_list;
 
 // Check if a given type is an instance of the 'value_list' template.
 //
-namespace instance = ensketch::xstd::instance;
+namespace instance = ensketch::xstd::meta::instance;
 static_assert(instance::value_list<value_list<>>);
 static_assert(instance::value_list<value_list<-1>>);
 static_assert(instance::value_list<value_list<'c', -1>>);
@@ -60,13 +60,13 @@ static_assert(contains(value_list<-1, 'c'>{}, -1));
 static_assert(contains(value_list<-1, 'c'>{}, 'c'));
 static_assert(!contains(value_list<-1, 'c'>{}, 2u));
 //
-static_assert(!(value_list<>{} | ensketch::xstd::contains(-1)));
-static_assert(!(value_list<>{} | ensketch::xstd::contains('c')));
-static_assert((value_list<-1>{} | ensketch::xstd::contains(-1)));
-static_assert(!(value_list<'c'>{} | ensketch::xstd::contains(-1)));
-static_assert((value_list<-1, 'c'>{} | ensketch::xstd::contains(-1)));
-static_assert((value_list<-1, 'c'>{} | ensketch::xstd::contains('c')));
-static_assert(!(value_list<-1, 'c'>{} | ensketch::xstd::contains(2u)));
+static_assert(!(value_list<>{} | ensketch::xstd::meta::contains(-1)));
+static_assert(!(value_list<>{} | ensketch::xstd::meta::contains('c')));
+static_assert((value_list<-1>{} | ensketch::xstd::meta::contains(-1)));
+static_assert(!(value_list<'c'>{} | ensketch::xstd::meta::contains(-1)));
+static_assert((value_list<-1, 'c'>{} | ensketch::xstd::meta::contains(-1)));
+static_assert((value_list<-1, 'c'>{} | ensketch::xstd::meta::contains('c')));
+static_assert(!(value_list<-1, 'c'>{} | ensketch::xstd::meta::contains(2u)));
 
 // Check whether the given value list is a set
 //

@@ -1,8 +1,8 @@
 #pragma once
 #include <tuple>
 //
-#include <ensketch/xstd/static_index_list.hpp>
-#include <ensketch/xstd/type_list.hpp>
+#include <ensketch/xstd/meta/static_index_list.hpp>
+#include <ensketch/xstd/meta/type_list.hpp>
 
 namespace ensketch::xstd {
 
@@ -26,9 +26,9 @@ concept tuple_get_access = requires(tuple_type value) {
 /// Checks whether a given type fulfills the requirements of a generic tuple.
 ///
 template <typename tuple_type>
-concept tuple =
-    for_all(static_index_list_from_iota<std::tuple_size<tuple_type>::value>(),
-            []<size_t index> { return tuple_get_access<tuple_type, index>; });
+concept tuple = for_all(
+    meta::static_index_list_from_iota<std::tuple_size<tuple_type>::value>(),
+    []<size_t index> { return tuple_get_access<tuple_type, index>; });
 
 ///
 ///
@@ -50,7 +50,7 @@ concept xstd_tuple_value_access = requires(tuple_type tuple) {
 ///
 template <typename tuple_type>
 concept xstd_tuple = for_all(
-    static_index_list_from_iota<tuple_type::size()>(),  //
+    meta::static_index_list_from_iota<tuple_type::size()>(),  //
     []<size_t index> { return xstd_tuple_value_access<tuple_type, index>; });
 
 ///
@@ -64,14 +64,15 @@ concept reducible_xstd_tuple = xstd_tuple<reduction<tuple_type>>;
 ///
 // A tuple type is not a tag type and as such should be given as template argument.
 template <generic::tuple tuple_type, size_t... indices>
-consteval auto type_list_from(static_index_list<indices...>) {
-  return type_list<typename std::tuple_element<indices, tuple_type>::type...>{};
+consteval auto type_list_from(meta::static_index_list<indices...>) {
+  return meta::type_list<
+      typename std::tuple_element<indices, tuple_type>::type...>{};
 }
 //
 template <generic::tuple tuple_type>
 consteval auto type_list_from() {
   return type_list_from<tuple_type>(
-      static_index_list_from_iota<std::tuple_size<tuple_type>::value>());
+      meta::static_index_list_from_iota<std::tuple_size<tuple_type>::value>());
 }
 
 ///
@@ -79,14 +80,15 @@ consteval auto type_list_from() {
 template <size_t... indices>
 constexpr auto for_each(generic::reducible_tuple auto&& tuple,
                         auto&& f,
-                        static_index_list<indices...>) {
+                        meta::static_index_list<indices...>) {
   (f(get<indices>(std::forward<decltype(tuple)>(tuple))), ...);
 }
 //
 constexpr auto for_each(generic::reducible_tuple auto&& tuple, auto&& f) {
   using tuple_type = meta::reduction<decltype(tuple)>;
-  for_each(std::forward<decltype(tuple)>(tuple), std::forward<decltype(f)>(f),
-           static_index_list_from_iota<std::tuple_size<tuple_type>::value>());
+  for_each(
+      std::forward<decltype(tuple)>(tuple), std::forward<decltype(f)>(f),
+      meta::static_index_list_from_iota<std::tuple_size<tuple_type>::value>());
 }
 
 }  // namespace ensketch::xstd

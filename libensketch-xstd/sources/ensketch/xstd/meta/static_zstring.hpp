@@ -1,7 +1,7 @@
 #pragma once
 #include <ensketch/xstd/utility.hpp>
 
-namespace ensketch::xstd {
+namespace ensketch::xstd::meta {
 
 // Static zero-terminated strings can be used as template arguments.
 // C++20 support has to be enabled.
@@ -165,4 +165,4 @@ constexpr auto tail(static_zstring<N> str) noexcept {
   return suffix<str.size() - index>(str);
 }
 
-}  // namespace ensketch::xstd
+}  // namespace ensketch::xstd::meta

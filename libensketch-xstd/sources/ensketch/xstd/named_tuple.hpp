@@ -1,5 +1,5 @@
 #pragma once
-#include <ensketch/xstd/static_identifier_list.hpp>
+#include <ensketch/xstd/meta/static_identifier_list.hpp>
 #include <ensketch/xstd/tuple.hpp>
 
 namespace ensketch::xstd {
@@ -40,14 +40,15 @@ concept reducible_unnamed_tuple = unnamed_tuple<reduction<tuple_type>>;
 
 }  // namespace generic
 
-template <instance::static_identifier_list identifiers, generic::tuple T>
+template <meta::instance::static_identifier_list identifiers, generic::tuple T>
   requires(size(identifiers{}) == std::tuple_size<T>::value)  //
 struct named_tuple;
 
 namespace detail {
 template <typename type>
 struct is_named_tuple : std::false_type {};
-template <instance::static_identifier_list names, generic::tuple tuple_type>
+template <meta::instance::static_identifier_list names,
+          generic::tuple tuple_type>
 struct is_named_tuple<named_tuple<names, tuple_type>> : std::true_type {};
 }  // namespace detail
 
@@ -56,7 +57,7 @@ namespace instance {
 ///
 ///
 template <typename type>
-concept named_tuple = detail::is_named_tuple<type>::value;
+concept named_tuple = xstd::detail::is_named_tuple<type>::value;
 
 ///
 ///
@@ -65,14 +66,14 @@ concept reducible_named_tuple = named_tuple<reduction<T>>;
 
 }  // namespace instance
 
-template <instance::static_identifier_list identifiers, generic::tuple T>
+template <meta::instance::static_identifier_list identifiers, generic::tuple T>
   requires(size(identifiers{}) == std::tuple_size<T>::value)  //
 struct named_tuple : T {
   static constexpr auto names = identifiers{};
   using tuple_type            = T;
   static constexpr auto types = type_list_from<tuple_type>();
 
-  template <static_zstring name>
+  template <meta::static_zstring name>
   using type = decltype(element<index<name>(names)>(types));
 
   static constexpr auto size() noexcept -> size_t { return tuple_type::size(); }
@@ -85,21 +86,21 @@ struct named_tuple : T {
   ///
   template <size_t... indices>
   constexpr named_tuple(generic::reducible_unnamed_tuple auto&& x,
-                        static_index_list<indices...>) noexcept(  //
+                        meta::static_index_list<indices...>) noexcept(  //
       noexcept(named_tuple(value<indices>(std::forward<decltype(x)>(x))...)))
       : named_tuple(value<indices>(std::forward<decltype(x)>(x))...) {}
   ///
   explicit constexpr named_tuple(
       generic::reducible_unnamed_tuple auto&& x) noexcept(  //
       noexcept(named_tuple(std::forward<decltype(x)>(x),
-                           static_index_list_from_iota<size()>())))
+                           meta::static_index_list_from_iota<size()>())))
       : named_tuple(std::forward<decltype(x)>(x),
-                    static_index_list_from_iota<size()>()) {}
+                    meta::static_index_list_from_iota<size()>()) {}
 
   //
-  template <static_zstring... names>
+  template <meta::static_zstring... names>
   constexpr named_tuple(generic::reducible_named_tuple auto&& x,
-                        static_identifier_list<names...>) noexcept(         //
+                        meta::static_identifier_list<names...>) noexcept(   //
       noexcept(tuple_type(value<names>(std::forward<decltype(x)>(x))...)))  //
       : tuple_type(value<names>(std::forward<decltype(x)>(x))...) {}
 
@@ -124,9 +125,9 @@ struct named_tuple : T {
     return *this;
   }
 
-  template <static_zstring... names>
+  template <meta::static_zstring... names>
   constexpr void assign(generic::reducible_named_tuple auto&& x,
-                        static_identifier_list<names...>) noexcept(  //
+                        meta::static_identifier_list<names...>) noexcept(  //
       noexcept(static_cast<tuple_type&>(*this).assign(
           value<names>(std::forward<decltype(x)>(x))...))) {
     static_cast<tuple_type&>(*this).assign(
@@ -197,7 +198,7 @@ value(instance::reducible_named_tuple auto&& t) noexcept(
   return get<index>(std::forward<decltype(t)>(t).tuple());
 }
 
-template <static_zstring name>
+template <meta::static_zstring name>
 constexpr decltype(auto) value(
     instance::reducible_named_tuple auto&& t) noexcept {
   using type           = meta::reduction<decltype(t)>;
@@ -205,10 +206,10 @@ constexpr decltype(auto) value(
   return get<index<name>(names)>(std::forward<decltype(t)>(t).tuple());
 }
 
-template <static_zstring... names>
+template <meta::static_zstring... names>
 constexpr void for_each(generic::reducible_named_tuple auto&& t,
                         auto&& f,
-                        static_identifier_list<names...>) {
+                        meta::static_identifier_list<names...>) {
   (f.template operator()<names>(value<names>(std::forward<decltype(t)>(t))),
    ...);
 }
@@ -234,7 +235,7 @@ namespace std {
 
 /// Provides support for using structured bindings with tuple.
 ///
-template <ensketch::xstd::instance::static_identifier_list names,
+template <ensketch::xstd::meta::instance::static_identifier_list names,
           ensketch::xstd::generic::tuple tuple_type>
 struct tuple_size<ensketch::xstd::named_tuple<names, tuple_type>> {
   static constexpr size_t value = std::tuple_size<tuple_type>::value;
@@ -243,7 +244,7 @@ struct tuple_size<ensketch::xstd::named_tuple<names, tuple_type>> {
 /// Provides support for using structured bindings with tuple.
 ///
 template <size_t index,
-          ensketch::xstd::instance::static_identifier_list names,
+          ensketch::xstd::meta::instance::static_identifier_list names,
           ensketch::xstd::generic::tuple tuple_type>
 struct tuple_element<index, ensketch::xstd::named_tuple<names, tuple_type>> {
   using type = typename std::tuple_element<index, tuple_type>::type;

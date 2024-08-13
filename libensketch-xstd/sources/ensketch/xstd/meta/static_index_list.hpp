@@ -1,7 +1,7 @@
 #pragma once
-#include <ensketch/xstd/value_list.hpp>
+#include <ensketch/xstd/meta/value_list.hpp>
 
-namespace ensketch::xstd {
+namespace ensketch::xstd::meta {
 
 /// The 'static_index_list' template is an alias of 'value_list'.
 /// Additionally, it requires that every contained value is of type 'size_t'.
@@ -57,4 +57,4 @@ consteval bool bounded(instance::static_index_list auto list) {
   return for_all(list, []<size_t x> { return x < bound; });
 }
 
-}  // namespace ensketch::xstd
+}  // namespace ensketch::xstd::meta

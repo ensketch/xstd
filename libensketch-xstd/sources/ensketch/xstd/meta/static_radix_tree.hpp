@@ -1,8 +1,8 @@
 #pragma once
-#include <ensketch/xstd/detail/static_radix_tree/node.hpp>
-#include <ensketch/xstd/static_zstring_list.hpp>
+#include <ensketch/xstd/meta/detail/static_radix_tree/node.hpp>
+#include <ensketch/xstd/meta/static_zstring_list.hpp>
 
-namespace ensketch::xstd {
+namespace ensketch::xstd::meta {
 
 /// Instances of the 'static_radix_tree' template
 /// are tag types that represent a radix tree.
@@ -29,7 +29,7 @@ namespace detail {
 template <typename type>
 struct is_static_radix_tree : std::false_type {};
 template <typename type>
-struct is_static_radix_tree<xstd::static_radix_tree<type>> : std::true_type {};
+struct is_static_radix_tree<meta::static_radix_tree<type>> : std::true_type {};
 }  // namespace detail
 
 namespace instance {
@@ -117,4 +117,4 @@ constexpr auto traverse(instance::static_radix_tree auto tree,
   return traverse(root(tree), str, std::forward<decltype(f)>(f));
 }
 
-}  // namespace ensketch::xstd
+}  // namespace ensketch::xstd::meta

@@ -1,7 +1,7 @@
-#include <ensketch/xstd/static_index_list.hpp>
+#include <ensketch/xstd/meta/static_index_list.hpp>
 
-using ensketch::xstd::static_index_list;
-using ensketch::xstd::static_index_list_from_iota;
+using ensketch::xstd::meta::static_index_list;
+using ensketch::xstd::meta::static_index_list_from_iota;
 
 static_assert(static_index_list_from_iota<0>() == static_index_list<>{});
 static_assert(static_index_list_from_iota<1>() == static_index_list<0>{});

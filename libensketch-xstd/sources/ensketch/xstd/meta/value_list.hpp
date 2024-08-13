@@ -1,7 +1,7 @@
 #pragma once
 #include <ensketch/xstd/utility.hpp>
 
-namespace ensketch::xstd {
+namespace ensketch::xstd::meta {
 
 /// The template 'value_list' is
 /// a utility for template meta programming.
@@ -277,4 +277,4 @@ constexpr void for_each(value_list<values...>, auto&& f) {
   (f.template operator()<values>(), ...);
 }
 
-}  // namespace ensketch::xstd
+}  // namespace ensketch::xstd::meta

@@ -1,7 +1,7 @@
 #pragma once
 #include <ensketch/xstd/utility.hpp>
 
-namespace ensketch::xstd {
+namespace ensketch::xstd::meta {
 
 /// The 'type_list' template is a utility for template meta programming.
 /// Within a 'type_list', packaging, accessing, and modifying types
@@ -479,4 +479,4 @@ constexpr auto for_each_until(instance::type_list auto list, auto f) {
   }
 }
 
-}  // namespace ensketch::xstd
+}  // namespace ensketch::xstd::meta
