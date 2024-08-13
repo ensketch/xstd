@@ -1,5 +1,5 @@
 #pragma once
-#include <ensketch/xstd/meta/static_zstring.hpp>
+#include <ensketch/xstd/meta/string.hpp>
 #include <ensketch/xstd/meta/value_list.hpp>
 
 namespace ensketch::xstd::meta {
@@ -9,13 +9,13 @@ namespace ensketch::xstd::meta {
 /// No inheritance is used, because
 /// all value list meta functions still need to be applyable.
 ///
-template <static_zstring... strings>
+template <string... strings>
 using string_list = value_list<strings...>;
 
 namespace detail {
 template <typename type>
 struct is_string_list : std::false_type {};
-template <static_zstring... strings>
+template <string... strings>
 struct is_string_list<string_list<strings...>> : std::true_type {};
 }  // namespace detail
 

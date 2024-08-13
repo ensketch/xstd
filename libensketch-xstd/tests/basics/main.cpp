@@ -4,11 +4,12 @@
 #include <ensketch/xstd/meta/radix_tree.hpp>
 
 using ensketch::xstd::czstring;
+using namespace ensketch::xstd;
 using namespace ensketch::xstd::meta;
 // using ensketch::xstd::radix_tree;
 // namespace instance = ensketch::xstd::instance;
 
-// template <detail::radix_tree::node_instance root, static_zstring
+// template <detail::radix_tree::node_instance root, string
 // prefix> constexpr void print() {
 //   using namespace std;
 //   constexpr auto str = prefix + '|' + root::string;
@@ -59,7 +60,7 @@ using namespace ensketch::xstd::meta;
 // static_assert(srt::node_instance<tree>);
 
 // inline void visit(czstring cstr) {
-//   const auto visited = srt::visit<tree>(cstr, []<static_zstring str> {
+//   const auto visited = srt::visit<tree>(cstr, []<string str> {
 //     cout << '"' << str << '"' << " has been visited!" << endl;
 //   });
 //   if (!visited)
@@ -69,7 +70,7 @@ using namespace ensketch::xstd::meta;
 
 // inline void traverse(czstring cstr) {
 //   const auto traversed =
-//       srt::traverse<tree>(cstr, [&]<static_zstring str>(czstring tail) {
+//       srt::traverse<tree>(cstr, [&]<string str>(czstring tail) {
 //         cout << '"' << cstr << '"' << " visited the prefix \"" << str
 //              << "\" with the tail \"" << tail << "\"!" << endl;
 //       });
@@ -80,7 +81,7 @@ using namespace ensketch::xstd::meta;
 
 using namespace std;
 
-template <detail::radix_tree::node_instance root, static_zstring prefix>
+template <detail::radix_tree::node_instance root, meta::string prefix>
 constexpr void print() {
   constexpr auto str = prefix + '|' + root::prefix;
   for_each(typename root::children{},
@@ -97,7 +98,7 @@ constexpr void print(radix_tree_instance auto t) {
 }
 
 inline void print_visit(radix_tree_instance auto tree, czstring cstr) {
-  const auto visited = visit(tree, cstr, []<static_zstring str> {
+  const auto visited = visit(tree, cstr, []<meta::string str> {
     cout << '"' << str << '"' << " has been visited!" << endl;
   });
   if (!visited)
@@ -107,7 +108,7 @@ inline void print_visit(radix_tree_instance auto tree, czstring cstr) {
 
 inline void print_traverse(radix_tree_instance auto tree, czstring cstr) {
   const auto traversed =
-      traverse(tree, cstr, [&]<static_zstring str>(czstring tail) {
+      traverse(tree, cstr, [&]<meta::string str>(czstring tail) {
         cout << '"' << cstr << '"' << " visited the prefix \"" << str
              << "\" with the tail \"" << tail << "\"!" << endl;
       });

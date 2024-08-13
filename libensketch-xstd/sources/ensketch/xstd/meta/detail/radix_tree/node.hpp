@@ -1,5 +1,5 @@
 #pragma once
-#include <ensketch/xstd/meta/static_zstring.hpp>
+#include <ensketch/xstd/meta/string.hpp>
 #include <ensketch/xstd/meta/type_list.hpp>
 
 namespace ensketch::xstd::meta::detail::radix_tree {
@@ -47,19 +47,17 @@ using node_list = type_list<nodes...>;
 /// The actual 'node' template can be defined
 /// with correct and recursive constraints.
 ///
-template <static_zstring str,
-          node_list_instance nodes = node_list<>,
-          bool leaf                = false>
+template <string str, node_list_instance nodes = node_list<>, bool leaf = false>
 struct node {
-  static constexpr static_zstring prefix = str;
-  using children                         = nodes;
-  static constexpr bool is_leaf          = leaf;
+  static constexpr string prefix = str;
+  using children                 = nodes;
+  static constexpr bool is_leaf  = leaf;
 };
 
 /// 'leaf' is an alias to the 'node' template.
 /// It is used to simplify marking nodes as leaves.
 ///
-template <static_zstring str, node_list_instance children = node_list<>>
+template <string str, node_list_instance children = node_list<>>
 using leaf = node<str, children, true>;
 
 ///
@@ -68,14 +66,14 @@ using leaf = node<str, children, true>;
 
 ///
 ///
-template <static_zstring str, bool is_leaf = false>
+template <string str, bool is_leaf = false>
 consteval auto node_from(node_list_instance auto nodes) {
   return node<str, decltype(nodes), is_leaf>{};
 }
 
 ///
 ///
-template <static_zstring str>
+template <string str>
 consteval auto leaf_from(node_list_instance auto nodes) {
   return node_from<str, true>(nodes);
 }
@@ -138,7 +136,7 @@ consteval auto is_leaf(node_instance auto root) {
 /// and returns a new 'node' instance with the same children
 /// and leaf property but with a newly set string.
 ///
-template <static_zstring str>
+template <string str>
 consteval auto prefix_assign(node_instance auto root) {
   return node_from<str, is_leaf(root)>(children(root));
 }
@@ -157,7 +155,7 @@ consteval auto leaf_assign(node_instance auto root) {
 
 ///
 ///
-template <static_zstring... str>
+template <string... str>
 consteval auto insert(node_instance auto root) {
   return insert_implementation<str...>(root);
 }

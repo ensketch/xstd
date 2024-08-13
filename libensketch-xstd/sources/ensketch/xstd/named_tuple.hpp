@@ -8,7 +8,7 @@ namespace generic {
 
 ///
 ///
-template <typename tuple_type, static_zstring name>
+template <typename tuple_type, meta::string name>
 concept named_tuple_value_access = requires(tuple_type x) {
   {
     value<name>(x)
@@ -19,7 +19,7 @@ concept named_tuple_value_access = requires(tuple_type x) {
 ///
 template <typename tuple_type>
 concept named_tuple =
-    tuple<tuple_type> && for_all(tuple_type::names, []<static_zstring name> {
+    tuple<tuple_type> && for_all(tuple_type::names, []<meta::string name> {
       return named_tuple_value_access<tuple_type, name>;
     });
 
@@ -72,7 +72,7 @@ struct named_tuple : T {
   using tuple_type            = T;
   static constexpr auto types = type_list_from<tuple_type>();
 
-  template <meta::static_zstring name>
+  template <meta::string name>
   using type = decltype(element<index<name>(names)>(types));
 
   static constexpr auto size() noexcept -> size_t { return tuple_type::size(); }
@@ -97,7 +97,7 @@ struct named_tuple : T {
                     meta::index_list_from_iota<size()>()) {}
 
   //
-  template <meta::static_zstring... names>
+  template <meta::string... names>
   constexpr named_tuple(generic::reducible_named_tuple auto&& x,
                         meta::name_list<names...>) noexcept(                //
       noexcept(tuple_type(value<names>(std::forward<decltype(x)>(x))...)))  //
@@ -124,7 +124,7 @@ struct named_tuple : T {
     return *this;
   }
 
-  template <meta::static_zstring... names>
+  template <meta::string... names>
   constexpr void assign(generic::reducible_named_tuple auto&& x,
                         meta::name_list<names...>) noexcept(  //
       noexcept(static_cast<tuple_type&>(*this).assign(
@@ -179,7 +179,7 @@ struct named_tuple : T {
 };
 
 // template <template <typename...> typename tuple_template,
-//           static_zstring... names,
+//           string... names,
 //           typename... types>
 // constexpr auto auto_named_tuple(types&&... t) {
 //   using tuple_type = decltype(tuple_template(std::forward<types>(t)...));
@@ -197,7 +197,7 @@ value(instance::reducible_named_tuple auto&& t) noexcept(
   return get<index>(std::forward<decltype(t)>(t).tuple());
 }
 
-template <meta::static_zstring name>
+template <meta::string name>
 constexpr decltype(auto) value(
     instance::reducible_named_tuple auto&& t) noexcept {
   using type           = meta::reduction<decltype(t)>;
@@ -205,7 +205,7 @@ constexpr decltype(auto) value(
   return get<index<name>(names)>(std::forward<decltype(t)>(t).tuple());
 }
 
-template <meta::static_zstring... names>
+template <meta::string... names>
 constexpr void for_each(generic::reducible_named_tuple auto&& t,
                         auto&& f,
                         meta::name_list<names...>) {

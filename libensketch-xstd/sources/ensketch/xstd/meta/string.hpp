@@ -14,17 +14,17 @@ namespace ensketch::xstd::meta {
 // The length has to be known.
 //
 template <size_t N>
-struct static_zstring {
+struct string {
   static_assert(N > 0, "String must at least store a zero byte.");
 
   using iterator       = zstring;
   using const_iterator = czstring;
 
-  constexpr static_zstring() noexcept = default;
+  constexpr string() noexcept = default;
 
   // Enable implicit construction of static strings from C strings.
   //
-  constexpr static_zstring(const char (&str)[N]) noexcept {
+  constexpr string(const char (&str)[N]) noexcept {
     for (size_t i = 0; i < N; ++i) data_[i] = str[i];
   }
 
@@ -44,8 +44,8 @@ struct static_zstring {
 
   // The compiler needs to be able to compare the content of strings.
   //
-  friend constexpr auto operator<=>(const static_zstring&,
-                                    const static_zstring&) noexcept = default;
+  friend constexpr auto operator<=>(const string&,
+                                    const string&) noexcept = default;
 
   /// Returns the size of the string without the terminating null character.
   ///
@@ -71,25 +71,23 @@ struct static_zstring {
 };
 
 // These overloads decide whether a given value
-// is an instance of static_zstring.
+// is an instance of string.
 // Especially, this is useful for template meta programming with concepts.
 //
-constexpr bool is_static_zstring(auto _) noexcept {
+constexpr bool is_string(auto _) noexcept {
   return false;
 }
 template <size_t N>
-constexpr bool is_static_zstring(static_zstring<N> _) noexcept {
+constexpr bool is_string(string<N> _) noexcept {
   return true;
 }
 
-namespace instance {
 template <auto value>
-concept static_zstring = is_static_zstring(value);
-}
+concept string_instance = is_string(value);
 
 // Provide support for custom literal '_sz'.
 //
-template <static_zstring str>
+template <string str>
 constexpr auto operator""_sz() noexcept {
   return str;
 }
@@ -97,8 +95,8 @@ constexpr auto operator""_sz() noexcept {
 // Append characters to static string should be compile-time enabled.
 //
 template <size_t N>
-constexpr auto operator+(const static_zstring<N>& str, char c) noexcept {
-  static_zstring<N + 1> result{};
+constexpr auto operator+(const string<N>& str, char c) noexcept {
+  string<N + 1> result{};
   for (size_t i = 0; i < N - 1; ++i) result[i] = str[i];
   result[N - 1] = c;
   return result;
@@ -107,9 +105,9 @@ constexpr auto operator+(const static_zstring<N>& str, char c) noexcept {
 // Appending two static strings should also be compile-time enabled.
 //
 template <size_t N, size_t M>
-constexpr auto operator+(const static_zstring<N>& str1,
-                         const static_zstring<M>& str2) noexcept {
-  static_zstring<N + M - 1> result{};
+constexpr auto operator+(const string<N>& str1,
+                         const string<M>& str2) noexcept {
+  string<N + M - 1> result{};
   size_t i = 0;
   for (; i < N - 1; ++i) result[i] = str1[i];
   for (; i < N + M - 1; ++i) result[i] = str2[i - N + 1];
@@ -120,10 +118,10 @@ constexpr auto operator+(const static_zstring<N>& str1,
 /// of the given string specified by offset and size.
 ///
 template <size_t offset, size_t size, size_t N>
-constexpr auto substring(static_zstring<N> str) noexcept  //
+constexpr auto substring(string<N> str) noexcept  //
   requires(offset + size < N)
 {
-  static_zstring<size + 1> result{};
+  string<size + 1> result{};
   for (size_t i = 0; i < size; ++i) result[i] = str[offset + i];
   return result;
 }
@@ -132,7 +130,7 @@ constexpr auto substring(static_zstring<N> str) noexcept  //
 /// of the given string with given size.
 ///
 template <size_t size, size_t N>
-constexpr auto prefix(static_zstring<N> str) noexcept  //
+constexpr auto prefix(string<N> str) noexcept  //
   requires(size < N)
 {
   return substring<0, size>(str);
@@ -142,7 +140,7 @@ constexpr auto prefix(static_zstring<N> str) noexcept  //
 /// of the given string with given size.
 ///
 template <size_t size, size_t N>
-constexpr auto suffix(static_zstring<N> str) noexcept  //
+constexpr auto suffix(string<N> str) noexcept  //
   requires(size < N)
 {
   return substring<N - 1 - size, size>(str);
@@ -152,8 +150,8 @@ constexpr auto suffix(static_zstring<N> str) noexcept  //
 /// of the two given strings are not equal.
 ///
 template <size_t N, size_t M>
-constexpr auto prefix_match_index(static_zstring<N> str1,
-                                  static_zstring<M> str2) noexcept -> size_t {
+constexpr auto prefix_match_index(string<N> str1,
+                                  string<M> str2) noexcept -> size_t {
   constexpr auto bound = ((N < M) ? N : M) - 1;
   for (size_t i = 0; i < bound; ++i)
     if (str1[i] != str2[i]) return i;
@@ -161,7 +159,7 @@ constexpr auto prefix_match_index(static_zstring<N> str1,
 }
 
 template <size_t index, size_t N>
-constexpr auto tail(static_zstring<N> str) noexcept {
+constexpr auto tail(string<N> str) noexcept {
   return suffix<str.size() - index>(str);
 }
 

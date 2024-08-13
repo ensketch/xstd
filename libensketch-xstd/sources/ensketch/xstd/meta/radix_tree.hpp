@@ -42,14 +42,14 @@ concept radix_tree_instance = detail::is_radix_tree<type>::value;
 
 ///
 ///
-template <static_zstring... str>
+template <string... str>
 consteval auto radix_tree_from() {
   return insert<str...>(radix_tree<>{});
 }
 
 ///
 ///
-template <static_zstring... str>
+template <string... str>
 consteval auto radix_tree_from(string_list<str...>) {
   return radix_tree_from<str...>();
 }
@@ -89,7 +89,7 @@ consteval auto root(radix_tree_instance auto tree) {
 /// Modifiers
 ///
 
-template <static_zstring... str>
+template <string... str>
 consteval auto insert(radix_tree_instance auto tree) {
   return radix_tree{insert<str...>(root(tree))};
 }
