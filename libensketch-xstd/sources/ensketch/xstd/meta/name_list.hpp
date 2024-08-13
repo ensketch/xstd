@@ -1,5 +1,5 @@
 #pragma once
-#include <ensketch/xstd/meta/static_zstring_list.hpp>
+#include <ensketch/xstd/meta/string_list.hpp>
 
 namespace ensketch::xstd::meta {
 
@@ -7,8 +7,8 @@ namespace ensketch::xstd::meta {
 /// that are unique among all contained strings.
 ///
 template <static_zstring... strings>
-  requires(is_set(static_zstring_list<strings...>{}))  //
-using name_list = static_zstring_list<strings...>;
+  requires(is_set(string_list<strings...>{}))  //
+using name_list = string_list<strings...>;
 
 namespace detail {
 template <typename type>

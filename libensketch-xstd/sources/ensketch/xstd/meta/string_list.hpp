@@ -10,28 +10,19 @@ namespace ensketch::xstd::meta {
 /// all value list meta functions still need to be applyable.
 ///
 template <static_zstring... strings>
-using static_zstring_list = value_list<strings...>;
+using string_list = value_list<strings...>;
 
 namespace detail {
 template <typename type>
-struct is_static_zstring_list : std::false_type {};
+struct is_string_list : std::false_type {};
 template <static_zstring... strings>
-struct is_static_zstring_list<static_zstring_list<strings...>>
-    : std::true_type {};
+struct is_string_list<string_list<strings...>> : std::true_type {};
 }  // namespace detail
-
-// The namespace 'instance' is always used to provide concepts
-// that check whether a given type is
-// the instance of a specific type template.
-//
-namespace instance {
 
 /// The concept checks whether the given type
 /// is a static zstring list.
 ///
 template <typename list>
-concept static_zstring_list = detail::is_static_zstring_list<list>::value;
-
-}  // namespace instance
+concept string_list_instance = detail::is_string_list<list>::value;
 
 }  // namespace ensketch::xstd::meta

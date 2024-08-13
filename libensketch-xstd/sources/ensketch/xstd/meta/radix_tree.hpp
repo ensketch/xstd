@@ -1,6 +1,6 @@
 #pragma once
 #include <ensketch/xstd/meta/detail/radix_tree/node.hpp>
-#include <ensketch/xstd/meta/static_zstring_list.hpp>
+#include <ensketch/xstd/meta/string_list.hpp>
 
 namespace ensketch::xstd::meta {
 
@@ -50,7 +50,7 @@ consteval auto radix_tree_from() {
 ///
 ///
 template <static_zstring... str>
-consteval auto radix_tree_from(static_zstring_list<str...>) {
+consteval auto radix_tree_from(string_list<str...>) {
   return radix_tree_from<str...>();
 }
 
