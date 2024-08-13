@@ -85,16 +85,16 @@ struct named_tuple : T {
   ///
   template <size_t... indices>
   constexpr named_tuple(generic::reducible_unnamed_tuple auto&& x,
-                        meta::static_index_list<indices...>) noexcept(  //
+                        meta::index_list<indices...>) noexcept(  //
       noexcept(named_tuple(value<indices>(std::forward<decltype(x)>(x))...)))
       : named_tuple(value<indices>(std::forward<decltype(x)>(x))...) {}
   ///
   explicit constexpr named_tuple(
       generic::reducible_unnamed_tuple auto&& x) noexcept(  //
       noexcept(named_tuple(std::forward<decltype(x)>(x),
-                           meta::static_index_list_from_iota<size()>())))
+                           meta::index_list_from_iota<size()>())))
       : named_tuple(std::forward<decltype(x)>(x),
-                    meta::static_index_list_from_iota<size()>()) {}
+                    meta::index_list_from_iota<size()>()) {}
 
   //
   template <meta::static_zstring... names>
@@ -144,7 +144,7 @@ struct named_tuple : T {
   // So, we can use the assign method of the base class.
   // template <size_t... indices>
   // constexpr void assign(generic::reducible_tuple auto&& x,
-  //                       static_index_list<indices...>) noexcept(  //
+  //                       index_list<indices...>) noexcept(  //
   //     noexcept(assign(get<indices>(std::forward<decltype(x)>(x))...))) {
   //   assign(get<indices>(std::forward<decltype(x)>(x))...);
   // }
@@ -152,9 +152,9 @@ struct named_tuple : T {
   // constexpr regular_tuple& operator=(
   //     generic::reducible_tuple auto&& x) noexcept(  //
   //     noexcept(assign(std::forward<decltype(x)>(x),
-  //                     meta::static_index_list::iota<size()>{}))) {
+  //                     meta::index_list::iota<size()>{}))) {
   //   assign(std::forward<decltype(x)>(x),
-  //          meta::static_index_list::iota<size()>{});
+  //          meta::index_list::iota<size()>{});
   //   return *this;
   // }
 
