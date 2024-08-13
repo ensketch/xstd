@@ -1,4 +1,4 @@
-namespace ensketch::xstd::meta::detail::static_radix_tree {
+namespace ensketch::xstd::meta::detail::radix_tree {
 
 // This is the implementation of the type predicate that checks
 // whether a given type is an instance of the 'node' template.
@@ -6,14 +6,14 @@ namespace ensketch::xstd::meta::detail::static_radix_tree {
 template <typename T>
 struct is_node_implementation : std::false_type {};
 //
-template <static_zstring str, instance::node_list children, bool is_leaf>
+template <static_zstring str, node_list_instance children, bool is_leaf>
 struct is_node_implementation<node<str, children, is_leaf>> : std::true_type {};
 
 // To establish a total order for nodes based on their strings,
 // we compare the first characters of the strings, ensuring uniqueness
 // when new strings are inserted into the static radix tree.
 //
-constexpr auto node_order = []<instance::node p, instance::node q> {
+constexpr auto node_order = []<node_instance p, node_instance q> {
   return p::prefix[0] <= q::prefix[0];
 };
 
@@ -49,7 +49,7 @@ constexpr auto node_order = []<instance::node p, instance::node q> {
 // In this case, the insertion should not change the given node at all.
 //
 template <static_zstring str, size_t index>
-consteval auto basic_insert_implementation(instance::node auto root)
+consteval auto basic_insert_implementation(node_instance auto root)
   requires(!prefix(root).empty()) && (index == 0)
 {
   return root;
@@ -64,7 +64,7 @@ consteval auto basic_insert_implementation(instance::node auto root)
 // makes sure that a given string can only be inserted once.
 //
 template <static_zstring str, size_t index>
-consteval auto basic_insert_implementation(instance::node auto root)
+consteval auto basic_insert_implementation(node_instance auto root)
   requires(index == prefix(root).size()) && (index == str.size())
 {
   return leaf_assign(root);
@@ -78,7 +78,7 @@ consteval auto basic_insert_implementation(instance::node auto root)
 // Hereby, the string of the old node will be changed to the tail.
 //
 template <static_zstring str, size_t index>
-consteval auto basic_insert_implementation(instance::node auto root)
+consteval auto basic_insert_implementation(node_instance auto root)
   requires(index < prefix(root).size()) && (index == str.size())
 {
   constexpr auto p = str;
@@ -98,7 +98,7 @@ consteval auto basic_insert_implementation(instance::node auto root)
 // if lexicographical order in the radix tree is of interest.
 //
 template <static_zstring str, size_t index>
-consteval auto basic_insert_implementation(instance::node auto root)
+consteval auto basic_insert_implementation(node_instance auto root)
   requires(index > 0) && (index < prefix(root).size()) && (index < str.size())
 {
   constexpr auto p  = prefix<index>(str);
@@ -115,7 +115,7 @@ consteval auto basic_insert_implementation(instance::node auto root)
 // can be simply done by checking the first character
 // in addition with some syntax for variadic templates.
 //
-template <static_zstring str, instance::node... nodes>
+template <static_zstring str, node_instance... nodes>
 consteval bool match_exists(node_list<nodes...>) {
   return ((str[0] == nodes::prefix[0]) || ...);
 }
@@ -129,7 +129,7 @@ consteval bool match_exists(node_list<nodes...>) {
 //
 template <static_zstring str, size_t index, bool matched>
   requires(!matched)
-consteval auto node_match(instance::node auto root) {
+consteval auto node_match(node_instance auto root) {
   constexpr auto p = prefix(root);
   constexpr auto q = tail<index>(str);
 
@@ -149,13 +149,13 @@ consteval auto node_match(instance::node auto root) {
 //
 template <static_zstring str, size_t index, bool matched>
   requires(matched)
-consteval auto node_match(instance::node auto root) {
+consteval auto node_match(node_instance auto root) {
   constexpr auto p = prefix(root);
   constexpr auto q = tail<index>(str);
 
-  constexpr auto new_children = transform(
-      children(root),
-      [&]<instance::node n> { return node_list_from(basic_insert<q>(n{})); });
+  constexpr auto new_children = transform(children(root), [&]<node_instance n> {
+    return node_list_from(basic_insert<q>(n{}));
+  });
   return node_from<p, is_leaf(root)>(new_children);
 }
 //
@@ -169,7 +169,7 @@ consteval auto node_match(instance::node auto root) {
 // In the other case, we can finally recursively call the basic insertion.
 //
 template <static_zstring str, size_t index>
-consteval auto basic_insert_implementation(instance::node auto root)
+consteval auto basic_insert_implementation(node_instance auto root)
   requires(index == prefix(root).size()) && (index < str.size())
 {
   constexpr auto q       = tail<index>(str);
@@ -180,7 +180,7 @@ consteval auto basic_insert_implementation(instance::node auto root)
 ///
 ///
 template <static_zstring str>
-consteval auto basic_insert(instance::node auto root) {
+consteval auto basic_insert(node_instance auto root) {
   constexpr auto index = prefix_match_index(prefix(root), str);
   return basic_insert_implementation<str, index>(root);
 }
@@ -189,12 +189,12 @@ consteval auto basic_insert(instance::node auto root) {
 ///
 template <static_zstring... str>
   requires(sizeof...(str) == 0)
-consteval auto insert_implementation(instance::node auto root) {
+consteval auto insert_implementation(node_instance auto root) {
   return root;
 }
 //
 template <static_zstring str, static_zstring... tail>
-consteval auto insert_implementation(instance::node auto root) {
+consteval auto insert_implementation(node_instance auto root) {
   return insert_implementation<tail...>(basic_insert<str>(root));
 }
 
@@ -219,7 +219,7 @@ constexpr auto prefix_match(czstring str) noexcept -> czstring {
 }
 
 template <static_zstring prefix = "">
-constexpr bool visit_implementation(instance::node auto r,
+constexpr bool visit_implementation(node_instance auto r,
                                     czstring str,
                                     auto&& f) {
   using root = decltype(r);
@@ -235,13 +235,13 @@ constexpr bool visit_implementation(instance::node auto r,
   } else {
     if (!*tail) return false;
   }
-  return for_each_until(typename root::children{}, [&]<instance::node child> {
+  return for_each_until(typename root::children{}, [&]<node_instance child> {
     return visit_implementation<new_prefix>(child{}, tail, f);
   });
 }
 
 template <static_zstring prefix = "">
-constexpr bool traverse_implementation(instance::node auto r,
+constexpr bool traverse_implementation(node_instance auto r,
                                        czstring str,
                                        auto&& f) {
   using root = decltype(r);
@@ -250,7 +250,7 @@ constexpr bool traverse_implementation(instance::node auto r,
   if (tail) {
     constexpr auto new_prefix = prefix + root::prefix;
     const auto found =
-        for_each_until(typename root::children{}, [&]<instance::node child> {
+        for_each_until(typename root::children{}, [&]<node_instance child> {
           return traverse_implementation<new_prefix>(child{}, tail, f);
         });
     if constexpr (root::is_leaf) {
@@ -263,4 +263,4 @@ constexpr bool traverse_implementation(instance::node auto r,
     return false;
 }
 
-}  // namespace ensketch::xstd::meta::detail::static_radix_tree
+}  // namespace ensketch::xstd::meta::detail::radix_tree

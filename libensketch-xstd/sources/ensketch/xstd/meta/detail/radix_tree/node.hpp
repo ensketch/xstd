@@ -2,7 +2,7 @@
 #include <ensketch/xstd/meta/static_zstring.hpp>
 #include <ensketch/xstd/meta/type_list.hpp>
 
-namespace ensketch::xstd::meta::detail::static_radix_tree {
+namespace ensketch::xstd::meta::detail::radix_tree {
 
 // A tree is typically defined as a recursive data structure.
 // So, we would like to offer recursive constraints and concepts.
@@ -27,33 +27,29 @@ constexpr bool is_node_list =
     instance::type_list<list> &&
     for_all(list{}, []<typename type> { return is_node<type>; });
 
-namespace instance {
-
 /// This concept checks whether a given type is an instance of 'node'.
 ///
 template <typename T>
-concept node = is_node<T>;
+concept node_instance = is_node<T>;
 
 /// This concept checks whether a given type is a 'type_list' instance
 /// such that all contained types are instances of the 'node' template.
 ///
 template <typename list>
-concept node_list = is_node_list<list>;
-
-}  // namespace instance
+concept node_list_instance = is_node_list<list>;
 
 /// A node list is a 'type_list' instance that
 /// contains only instances of the 'node' template.
 ///
-template <instance::node... nodes>
+template <node_instance... nodes>
 using node_list = type_list<nodes...>;
 
 /// The actual 'node' template can be defined
 /// with correct and recursive constraints.
 ///
 template <static_zstring str,
-          instance::node_list nodes = node_list<>,
-          bool leaf                 = false>
+          node_list_instance nodes = node_list<>,
+          bool leaf                = false>
 struct node {
   static constexpr static_zstring prefix = str;
   using children                         = nodes;
@@ -63,7 +59,7 @@ struct node {
 /// 'leaf' is an alias to the 'node' template.
 /// It is used to simplify marking nodes as leaves.
 ///
-template <static_zstring str, instance::node_list children = node_list<>>
+template <static_zstring str, node_list_instance children = node_list<>>
 using leaf = node<str, children, true>;
 
 ///
@@ -73,20 +69,20 @@ using leaf = node<str, children, true>;
 ///
 ///
 template <static_zstring str, bool is_leaf = false>
-consteval auto node_from(instance::node_list auto nodes) {
+consteval auto node_from(node_list_instance auto nodes) {
   return node<str, decltype(nodes), is_leaf>{};
 }
 
 ///
 ///
 template <static_zstring str>
-consteval auto leaf_from(instance::node_list auto nodes) {
+consteval auto leaf_from(node_list_instance auto nodes) {
   return node_from<str, true>(nodes);
 }
 
 ///
 ///
-template <instance::node... nodes>
+template <node_instance... nodes>
 consteval auto node_list_from(nodes...) {
   return node_list<nodes...>{};
 }
@@ -97,18 +93,18 @@ consteval auto node_list_from(nodes...) {
 
 /// Check whether two instances of 'node' are the same.
 ///
-consteval auto operator==(instance::node auto x, instance::node auto y) {
+consteval auto operator==(node_instance auto x, node_instance auto y) {
   return false;
 }
 //
-template <instance::node list>
+template <node_instance list>
 consteval auto operator==(list, list) {
   return true;
 }
 
 /// Check whether two instances of 'node' are not the same.
 ///
-consteval auto operator!=(instance::node auto x, instance::node auto y) {
+consteval auto operator!=(node_instance auto x, node_instance auto y) {
   return !(x == y);
 }
 
@@ -118,19 +114,19 @@ consteval auto operator!=(instance::node auto x, instance::node auto y) {
 
 ///
 ///
-consteval auto prefix(instance::node auto root) {
+consteval auto prefix(node_instance auto root) {
   return decltype(root)::prefix;
 }
 
 ///
 ///
-consteval auto children(instance::node auto root) {
+consteval auto children(node_instance auto root) {
   return typename decltype(root)::children{};
 }
 
 ///
 ///
-consteval auto is_leaf(instance::node auto root) {
+consteval auto is_leaf(node_instance auto root) {
   return decltype(root)::is_leaf;
 }
 
@@ -143,26 +139,26 @@ consteval auto is_leaf(instance::node auto root) {
 /// and leaf property but with a newly set string.
 ///
 template <static_zstring str>
-consteval auto prefix_assign(instance::node auto root) {
+consteval auto prefix_assign(node_instance auto root) {
   return node_from<str, is_leaf(root)>(children(root));
 }
 
 ///
 ///
-consteval auto leaf_assign(instance::node auto root) {
+consteval auto leaf_assign(node_instance auto root) {
   return leaf_from<prefix(root)>(children(root));
 }
 
 ///
 ///
-// consteval auto children_assign(instance::node auto root) {
+// consteval auto children_assign(node_instance auto root) {
 //   return node_from<>();
 // }
 
 ///
 ///
 template <static_zstring... str>
-consteval auto insert(instance::node auto root) {
+consteval auto insert(node_instance auto root) {
   return insert_implementation<str...>(root);
 }
 
@@ -178,7 +174,7 @@ consteval auto insert(instance::node auto root) {
 /// and calls the function object
 /// with the static string provided as template parameter.
 ///
-constexpr bool visit(instance::node auto root, czstring str, auto&& f) {
+constexpr bool visit(node_instance auto root, czstring str, auto&& f) {
   return visit_implementation(root, str, std::forward<decltype(f)>(f));
 }
 
@@ -189,10 +185,10 @@ constexpr bool visit(instance::node auto root, czstring str, auto&& f) {
 /// If a prefix can be matched, the function object is called
 /// with the static prefix and the dynamic tail.
 ///
-constexpr bool traverse(instance::node auto root, czstring str, auto&& f) {
+constexpr bool traverse(node_instance auto root, czstring str, auto&& f) {
   return traverse_implementation(root, str, std::forward<decltype(f)>(f));
 }
 
-}  // namespace ensketch::xstd::meta::detail::static_radix_tree
+}  // namespace ensketch::xstd::meta::detail::radix_tree
 
-#include <ensketch/xstd/meta/detail/static_radix_tree/node.ipp>
+#include <ensketch/xstd/meta/detail/radix_tree/node.ipp>
