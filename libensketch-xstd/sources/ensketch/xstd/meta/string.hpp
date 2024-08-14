@@ -27,10 +27,17 @@ struct string {
     for (size_t i = 0; i < N; ++i) _data[i] = str[i];
   }
 
+  /// Return `string_view` to string content.
+  ///
+  constexpr auto view() const noexcept -> std::string_view {
+    return {data(), size()};
+  }
+
   // Enable implicit conversion to C strings.
   //
-  // constexpr operator zstring() noexcept { return _data; }
+  constexpr operator zstring() noexcept { return _data; }
   constexpr operator czstring() const noexcept { return _data; }
+  constexpr operator std::string_view() const noexcept { return view(); }
 
   /// Get index-based access to the characters.
   ///
@@ -79,6 +86,13 @@ struct string {
 template <string str>
 constexpr auto operator""_xs() noexcept {
   return str;
+}
+
+/// Return `string_view` to string content.
+///
+template <size_t N>
+constexpr auto view_from(const string<N>& str) noexcept -> std::string_view {
+  return str.view();
 }
 
 // Append characters to static string should be compile-time enabled.

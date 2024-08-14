@@ -23,4 +23,5 @@ static_assert(prefix_match_index("help"_xs, "help"_xs) == 4);
 
 void check() {
   for (auto c : "abc"_xs) print("c = {}", c);
+  const auto v = view_from("xyz"_xs);
 }
