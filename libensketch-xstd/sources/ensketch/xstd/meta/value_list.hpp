@@ -1,5 +1,5 @@
 #pragma once
-#include <ensketch/xstd/utility.hpp>
+#include <ensketch/xstd/meta/utility.hpp>
 
 namespace ensketch::xstd::meta {
 
@@ -21,10 +21,13 @@ struct value_list {};
 // by a typical struct template predicate specialization.
 //
 namespace detail {
+
 template <typename type>
 struct is_value_list : std::false_type {};
+
 template <auto... values>
 struct is_value_list<value_list<values...>> : std::true_type {};
+
 }  // namespace detail
 
 /// Check if a given type is an instance of the 'value_list' template.

@@ -1,5 +1,5 @@
 #pragma once
-#include <ensketch/xstd/utility.hpp>
+#include <ensketch/xstd/meta/utility.hpp>
 
 namespace ensketch::xstd::meta {
 
@@ -19,10 +19,13 @@ struct type_list {};
 // carried out by a struct template predicate specialization.
 //
 namespace detail {
+
 template <typename type>
 struct is_type_list : std::false_type {};
+
 template <typename... types>
 struct is_type_list<type_list<types...>> : std::true_type {};
+
 }  // namespace detail
 
 /// This is a concept that checks whether a given type
