@@ -14,9 +14,8 @@ namespace ensketch::xstd::meta {
 // The length has to be known.
 //
 template <size_t N>
+  requires(N > 0)  // String must at least store a zero byte.
 struct string {
-  static_assert(N > 0, "String must at least store a zero byte.");
-
   using iterator       = zstring;
   using const_iterator = czstring;
 
@@ -25,21 +24,21 @@ struct string {
   // Enable implicit construction of static strings from C strings.
   //
   constexpr string(const char (&str)[N]) noexcept {
-    for (size_t i = 0; i < N; ++i) data_[i] = str[i];
+    for (size_t i = 0; i < N; ++i) _data[i] = str[i];
   }
 
   // Enable implicit conversion to C strings.
   //
-  constexpr operator zstring() noexcept { return data_; }
-  constexpr operator czstring() const noexcept { return data_; }
+  // constexpr operator zstring() noexcept { return _data; }
+  constexpr operator czstring() const noexcept { return _data; }
 
   /// Get index-based access to the characters.
   ///
   constexpr auto operator[](size_t index) noexcept -> char& {
-    return data_[index];
+    return _data[index];
   }
   constexpr auto operator[](size_t index) const noexcept -> char {
-    return data_[index];
+    return _data[index];
   }
 
   // The compiler needs to be able to compare the content of strings.
@@ -57,38 +56,28 @@ struct string {
 
   /// Get access to the raw underlying data.
   ///
-  constexpr auto data() noexcept -> zstring { return data_; }
-  constexpr auto data() const noexcept -> czstring { return data_; }
+  constexpr auto data() noexcept -> zstring { return _data; }
+  constexpr auto data() const noexcept -> czstring { return _data; }
 
   /// Get acces to the underlying data by using iterators.
   ///
-  constexpr auto begin() noexcept -> iterator { return &data_[0]; }
-  constexpr auto begin() const noexcept -> const_iterator { return &data_[0]; }
-  constexpr auto end() noexcept -> iterator { return &data_[N]; }
-  constexpr auto end() const noexcept -> const_iterator { return &data_[N]; }
+  constexpr auto begin() noexcept -> iterator { return &_data[0]; }
+  constexpr auto begin() const noexcept -> const_iterator { return _data; }
+  constexpr auto end() noexcept -> iterator { return _data + (N - 1); }
+  constexpr auto end() const noexcept -> const_iterator {
+    return _data + (N - 1);
+  }
 
-  char data_[N]{};
+  // `string` must be a structural type to make it usable in template parameters.
+  // Thus, it cannot declare its data as private.
+  // private:
+  char _data[N]{};
 };
 
-// These overloads decide whether a given value
-// is an instance of string.
-// Especially, this is useful for template meta programming with concepts.
-//
-constexpr bool is_string(auto _) noexcept {
-  return false;
-}
-template <size_t N>
-constexpr bool is_string(string<N> _) noexcept {
-  return true;
-}
-
-template <auto value>
-concept string_instance = is_string(value);
-
-// Provide support for custom literal '_sz'.
+// Provide support for custom literal '_xs'.
 //
 template <string str>
-constexpr auto operator""_sz() noexcept {
+constexpr auto operator""_xs() noexcept {
   return str;
 }
 
@@ -158,6 +147,8 @@ constexpr auto prefix_match_index(string<N> str1,
   return bound;
 }
 
+///
+///
 template <size_t index, size_t N>
 constexpr auto tail(string<N> str) noexcept {
   return suffix<str.size() - index>(str);
