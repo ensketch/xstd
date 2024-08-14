@@ -4,14 +4,14 @@
 
 using namespace ensketch::xstd;
 
-static_assert(generic::tuple<std::tuple<>>);
-static_assert(generic::tuple<std::tuple<int>>);
-static_assert(generic::tuple<std::tuple<int, float>>);
+static_assert(generic_tuple<std::tuple<>>);
+static_assert(generic_tuple<std::tuple<int>>);
+static_assert(generic_tuple<std::tuple<int, float>>);
 //
-static_assert(generic::tuple<std::array<int, 0>>);
-static_assert(generic::tuple<std::array<int, 5>>);
-static_assert(generic::tuple<std::array<float, 0>>);
-static_assert(generic::tuple<std::array<float, 5>>);
+static_assert(generic_tuple<std::array<int, 0>>);
+static_assert(generic_tuple<std::array<int, 5>>);
+static_assert(generic_tuple<std::array<float, 0>>);
+static_assert(generic_tuple<std::array<float, 5>>);
 
 static_assert(type_list_from<std::tuple<>>() == meta::type_list<>{});
 static_assert(type_list_from<std::tuple<int>>() == meta::type_list<int>{});

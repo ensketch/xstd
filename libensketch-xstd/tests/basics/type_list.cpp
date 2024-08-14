@@ -8,9 +8,8 @@ using ensketch::xstd::meta::type_list;
 
 // For the following tests, we need to often check whether
 // a certain type is an instance of the 'type_list' template.
-// Hence, we provide a namespace alias for the 'instance' namespace.
 //
-namespace instance = ensketch::xstd::meta::instance;
+using ensketch::xstd::meta::type_list_instance;
 
 // To simplify the checks for type equality,
 // we make the 'equal' predicate available in the current scope.
@@ -27,19 +26,19 @@ constexpr auto less = []<typename x, typename y> {
 
 // Check whether a given type is an instance of the 'type_list' template.
 //
-static_assert(instance::type_list<type_list<>>);
-static_assert(instance::type_list<type_list<int>>);
-static_assert(instance::type_list<type_list<char>>);
-static_assert(instance::type_list<type_list<int, char>>);
-static_assert(instance::type_list<type_list<int, char, float>>);
-static_assert(instance::type_list<  //
+static_assert(type_list_instance<type_list<>>);
+static_assert(type_list_instance<type_list<int>>);
+static_assert(type_list_instance<type_list<char>>);
+static_assert(type_list_instance<type_list<int, char>>);
+static_assert(type_list_instance<type_list<int, char, float>>);
+static_assert(type_list_instance<  //
               type_list<int, type_list<char, float>, type_list<>>>);
 //
-static_assert(!instance::type_list<int>);
-static_assert(!instance::type_list<float>);
-static_assert(!instance::type_list<type_list<>&>);
-static_assert(!instance::type_list<const type_list<>>);
-static_assert(!instance::type_list<const type_list<>&>);
+static_assert(!type_list_instance<int>);
+static_assert(!type_list_instance<float>);
+static_assert(!type_list_instance<type_list<>&>);
+static_assert(!type_list_instance<const type_list<>>);
+static_assert(!type_list_instance<const type_list<>&>);
 
 // Get the number of types inside a type list.
 //

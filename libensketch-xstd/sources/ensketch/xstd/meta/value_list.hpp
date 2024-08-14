@@ -27,17 +27,10 @@ template <auto... values>
 struct is_value_list<value_list<values...>> : std::true_type {};
 }  // namespace detail
 
-// We simplify the API by providing a respective concept
-// inside the 'instance' namespace for this predicate.
-//
-namespace instance {
-
 /// Check if a given type is an instance of the 'value_list' template.
 ///
 template <typename type>
-concept value_list = detail::is_value_list<type>::value;
-
-}  // namespace instance
+concept value_list_instance = detail::is_value_list<type>::value;
 
 ///
 /// Ordering
@@ -45,20 +38,20 @@ concept value_list = detail::is_value_list<type>::value;
 
 /// Check whether two instances of 'value_list' are the same.
 ///
-consteval auto operator==(instance::value_list auto x,
-                          instance::value_list auto y) {
+consteval auto operator==(value_list_instance auto x,
+                          value_list_instance auto y) {
   return false;
 }
 //
-template <instance::value_list list>
+template <value_list_instance list>
 consteval auto operator==(list, list) {
   return true;
 }
 
 /// Check whether two instances of 'value_list' are not the same.
 ///
-consteval auto operator!=(instance::value_list auto x,
-                          instance::value_list auto y) {
+consteval auto operator!=(value_list_instance auto x,
+                          value_list_instance auto y) {
   return !(x == y);
 }
 
@@ -75,7 +68,7 @@ consteval auto size(value_list<values...>) -> size_t {
 
 /// Check whether a given 'value_list' instance contains no types.
 ///
-consteval auto empty(instance::value_list auto list) {
+consteval auto empty(value_list_instance auto list) {
   return size(list) == 0;
 }
 
@@ -99,16 +92,16 @@ consteval auto exists(value_list<values...>, auto f) {
 /// inside a given 'value_list' instance.
 ///
 template <auto value>
-consteval bool contains(instance::value_list auto list) {
+consteval bool contains(value_list_instance auto list) {
   return exists(list, []<auto x> { return meta::strict_equal(x, value); });
 }
 
-consteval auto contains(instance::value_list auto list, auto value) {
+consteval auto contains(value_list_instance auto list, auto value) {
   return exists(list, [value]<auto x> { return meta::strict_equal(x, value); });
 }
 
 consteval auto contains(auto value) {
-  return [value](instance::value_list auto list) consteval {  //
+  return [value](value_list_instance auto list) consteval {  //
     return contains(list, value);
   };
 }
@@ -150,7 +143,7 @@ consteval auto element(value_list<value, values...>)
 }
 
 consteval auto element(size_t index) {
-  return [index](instance::value_list auto list) consteval {
+  return [index](value_list_instance auto list) consteval {
     return element<index>(list);
   };
 }
@@ -160,7 +153,7 @@ consteval auto element(size_t index) {
 ///
 ///
 template <auto value>
-consteval auto index(instance::value_list auto list) -> size_t
+consteval auto index(value_list_instance auto list) -> size_t
   requires(!empty(list)) && (is_set(list)) && (contains<value>(list))
 {
   if constexpr (meta::strict_equal(value, front(list)))
@@ -171,7 +164,7 @@ consteval auto index(instance::value_list auto list) -> size_t
 
 /// Access the first element of a 'value_list' instance.
 ///
-consteval auto front(instance::value_list auto list)
+consteval auto front(value_list_instance auto list)
   requires(!empty(list))
 {
   return element<0>(list);
@@ -179,7 +172,7 @@ consteval auto front(instance::value_list auto list)
 
 /// Access the last element of a 'value_list' instance.
 ///
-consteval auto back(instance::value_list auto list)
+consteval auto back(value_list_instance auto list)
   requires(!empty(list))
 {
   return element<size(list) - 1>(list);
@@ -212,8 +205,8 @@ consteval auto concat(value_list<x...>, value_list<y...>) {
   return value_list<x..., y...>{};
 }
 //
-consteval auto operator+(instance::value_list auto x,
-                         instance::value_list auto y) {
+consteval auto operator+(value_list_instance auto x,
+                         value_list_instance auto y) {
   return concat(x, y);
 }
 
@@ -226,7 +219,7 @@ consteval auto pop_front(value_list<value, values...>) {
   return value_list<values...>{};
 }
 //
-consteval auto operator--(instance::value_list auto list) {
+consteval auto operator--(value_list_instance auto list) {
   return pop_front(list);
 }
 
@@ -239,12 +232,12 @@ consteval auto pop_back(value_list<value>) {
   return value_list<>{};
 }
 //
-consteval auto pop_back(instance::value_list auto list) {
+consteval auto pop_back(value_list_instance auto list) {
   // return push_front<decltype(front(list))>(pop_back(pop_front(list)));
   return *list + pop_back(--list);
 }
 //
-consteval auto operator--(instance::value_list auto list, int) {
+consteval auto operator--(value_list_instance auto list, int) {
   return pop_back(list);
 }
 
@@ -254,16 +247,16 @@ consteval auto reverse(value_list<> list) {
   return list;
 }
 //
-consteval auto reverse(instance::value_list auto list) {
+consteval auto reverse(value_list_instance auto list) {
   return reverse(--list) + *list;
 }
 //
-consteval auto operator~(instance::value_list auto list) {
+consteval auto operator~(value_list_instance auto list) {
   return reverse(list);
 }
 
 consteval auto reverse() {
-  return [](instance::value_list auto list) consteval {  //
+  return [](value_list_instance auto list) consteval {  //
     return reverse(list);
   };
 }

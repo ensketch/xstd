@@ -148,56 +148,27 @@ constexpr bool strict_equal(type x, type y) noexcept {
 
 }  // namespace meta
 
-// The syntax for concepts in modern C++ introduces some problems
-// when trying to consistently name concepts and structures
-// while still being able to distinguish them.
-// Here, all concepts will be put into their dedicated namespace
-// 'generic' to be able to give types and concepts the same name.
-//
-namespace generic {
-
-// Defining new concepts will require to call meta functions.
-// It makes sense to use this namespace by default.
-//
-using namespace meta;
-
 /// This concepts checks whether two given types are equal.
 ///
 template <typename x, typename y>
-concept identical = equal<x, y>;
+concept generic_identical = meta::equal<x, y>;
 
 /// This concepts checks whether 'x' is reducible to 'y'.
 /// That is, by decaying/reducing 'x' we get 'y'.
 ///
 template <typename x, typename y>
-concept reducible = identical<reduction<x>, y>;
+concept generic_reducible = generic_identical<meta::reduction<x>, y>;
 
 /// This concepts checks whether a given type is irreducible.
 /// That is, applying a decay/reduction to that type does not change it.
 ///
 template <typename x>
-concept irreducible = reducible<x, x>;
+concept generic_irreducible = generic_reducible<x, x>;
 
 /// This concepts checks whether a given type is a tag type, i.e. an empty type.
 ///
 template <typename type>
-concept tag = std::is_empty_v<type>;
-
-}  // namespace generic
-
-// This namespace is used for concepts, that check whether a
-// given type is a specialization of a specific type template.
-// As types and type templates may use the same name as similar concepts,
-// this namespace is mandatory to distinguish those different entities.
-//
-namespace instance {
-
-// As we will work with meta functions,
-// make the namespace available by default.
-//
-using namespace meta;
-
-}  // namespace instance
+concept generic_tag = std::is_empty_v<type>;
 
 /// Returns the content of a file given by its path as a standard `string` object.
 ///

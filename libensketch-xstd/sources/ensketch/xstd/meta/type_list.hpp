@@ -25,18 +25,11 @@ template <typename... types>
 struct is_type_list<type_list<types...>> : std::true_type {};
 }  // namespace detail
 
-// We simplify the API by providing a dedicated concept
-// inside the 'instance' namespace for this predicate.
-//
-namespace instance {
-
 /// This is a concept that checks whether a given type
 /// is an instance of the 'type_list' template.
 ///
 template <typename type>
-concept type_list = detail::is_type_list<type>::value;
-
-}  // namespace instance
+concept type_list_instance = detail::is_type_list<type>::value;
 
 ///
 /// Ordering
@@ -44,20 +37,20 @@ concept type_list = detail::is_type_list<type>::value;
 
 /// Check whether two instances of 'type_list' are the same.
 ///
-consteval auto operator==(instance::type_list auto x,
-                          instance::type_list auto y) {
+consteval auto operator==(type_list_instance auto x,
+                          type_list_instance auto y) {
   return false;
 }
 //
-template <instance::type_list list>
+template <type_list_instance list>
 consteval auto operator==(list, list) {
   return true;
 }
 
 /// Check whether two instances of 'type_list' are not the same.
 ///
-consteval auto operator!=(instance::type_list auto x,
-                          instance::type_list auto y) {
+consteval auto operator!=(type_list_instance auto x,
+                          type_list_instance auto y) {
   return !(x == y);
 }
 
@@ -90,7 +83,7 @@ consteval auto exists(type_list<types...>, auto f) {
 
 /// Check whether a given 'type_list' instance contains no types.
 ///
-consteval auto empty(instance::type_list auto list) {
+consteval auto empty(type_list_instance auto list) {
   return size(list) == 0;
 }
 
@@ -102,7 +95,7 @@ consteval auto empty(instance::type_list auto list) {
 //   return (meta::equal<type, types> || ...);
 // }
 template <typename type>
-consteval auto contains(instance::type_list auto list) {
+consteval auto contains(type_list_instance auto list) {
   return exists(list, []<typename t> { return meta::equal<t, type>; });
 }
 
@@ -110,7 +103,7 @@ consteval auto contains(instance::type_list auto list) {
 /// is contained inside a 'type_list' instance.
 ///
 template <typename type>
-consteval auto contains(instance::type_list auto list, type_list<type>) {
+consteval auto contains(type_list_instance auto list, type_list<type>) {
   return contains<type>(list);
 }
 
@@ -147,7 +140,7 @@ auto element(type_list<type, types...>) -> type
 ///
 ///
 template <typename type>
-consteval auto index(instance::type_list auto list) -> size_t
+consteval auto index(type_list_instance auto list) -> size_t
   requires(!empty(list)) && (is_set(list)) && (contains<type>(list))
 {
   if constexpr (meta::equal<type, decltype(front(list))>)
@@ -161,7 +154,7 @@ consteval auto index(instance::type_list auto list) -> size_t
 /// and returned as a slice of the given 'type_list' instance.
 ///
 template <size_t index>
-consteval auto slice(instance::type_list auto list) {
+consteval auto slice(type_list_instance auto list) {
   return type_list<decltype(element<index>(list))>{};
 }
 
@@ -169,26 +162,26 @@ consteval auto slice(instance::type_list auto list) {
 /// This function leads to compile errors
 /// if the given 'type_list' instance is empty.
 ///
-auto front(instance::type_list auto list) -> decltype(element<0>(list))
+auto front(type_list_instance auto list) -> decltype(element<0>(list))
   requires(!empty(list));
 
 /// Access the first element of a 'type_list' instance.
 /// The result type is wrapped by the 'type_list' template
 /// and returned as a slice of the given 'type_list' instance.
 ///
-consteval auto front_slice(instance::type_list auto list)
+consteval auto front_slice(type_list_instance auto list)
   requires(!empty(list))
 {
   return type_list<decltype(front(list))>{};
 }
 //
-consteval auto operator*(instance::type_list auto list) {
+consteval auto operator*(type_list_instance auto list) {
   return front_slice(list);
 }
 
 /// Access the last element of a 'type_list' instance.
 ///
-template <instance::type_list list>
+template <type_list_instance list>
 auto back(list x) -> decltype(element<size(list{}) - 1>(x))
   requires(!empty(x));
 
@@ -196,13 +189,13 @@ auto back(list x) -> decltype(element<size(list{}) - 1>(x))
 /// The result type is wrapped by the 'type_list' template
 /// and returned as a slice of the given 'type_list' instance.
 ///
-consteval auto back_slice(instance::type_list auto list)
+consteval auto back_slice(type_list_instance auto list)
   requires(!empty(list))
 {
   return type_list<decltype(back(list))>{};
 }
 //
-consteval auto operator!(instance::type_list auto list) {
+consteval auto operator!(type_list_instance auto list) {
   return back_slice(list);
 }
 
@@ -234,8 +227,7 @@ consteval auto concat(type_list<x...>, type_list<y...>) {
   return type_list<x..., y...>{};
 }
 //
-consteval auto operator+(instance::type_list auto x,
-                         instance::type_list auto y) {
+consteval auto operator+(type_list_instance auto x, type_list_instance auto y) {
   return concat(x, y);
 }
 
@@ -248,7 +240,7 @@ consteval auto pop_front(type_list<type, types...>) {
   return type_list<types...>{};
 }
 //
-consteval auto operator--(instance::type_list auto list) {
+consteval auto operator--(type_list_instance auto list) {
   return pop_front(list);
 }
 
@@ -261,12 +253,12 @@ consteval auto pop_back(type_list<type>) {
   return type_list<>{};
 }
 //
-consteval auto pop_back(instance::type_list auto list) {
+consteval auto pop_back(type_list_instance auto list) {
   // return push_front<decltype(front(list))>(pop_back(pop_front(list)));
   return *list + pop_back(--list);
 }
 //
-consteval auto operator--(instance::type_list auto list, int) {
+consteval auto operator--(type_list_instance auto list, int) {
   return pop_back(list);
 }
 
@@ -276,19 +268,19 @@ consteval auto reverse(type_list<> list) {
   return list;
 }
 //
-consteval auto reverse(instance::type_list auto list) {
+consteval auto reverse(type_list_instance auto list) {
   // return push_back<decltype(front(list))>(reverse(pop_front(list)));
   return reverse(--list) + *list;
 }
 //
-consteval auto operator~(instance::type_list auto list) {
+consteval auto operator~(type_list_instance auto list) {
   return reverse(list);
 }
 
 /// Insert a type at a given index into a 'type_list' instance;
 ///
 template <size_t index, typename type>
-consteval auto insert(instance::type_list auto list)
+consteval auto insert(type_list_instance auto list)
   requires(index <= size(list))
 {
   if constexpr (index == 0)
@@ -307,7 +299,7 @@ consteval auto insert(type_list<>, auto less) {
 }
 //
 template <typename type>
-consteval auto insert(instance::type_list auto list, auto less) {
+consteval auto insert(type_list_instance auto list, auto less) {
   if constexpr (less.template operator()<type, decltype(front(list))>())
     return push_front<type>(list);
   else
@@ -319,7 +311,7 @@ consteval auto insert(instance::type_list auto list, auto less) {
 /// Remove a type at a given index from a 'type_list' instance.
 ///
 template <size_t index>
-consteval auto remove(instance::type_list auto list)
+consteval auto remove(type_list_instance auto list)
   requires(index < size(list))
 {
   if constexpr (index == 0)
@@ -338,7 +330,7 @@ consteval auto remove(type_list<> list, auto f) {
   return list;
 }
 //
-consteval auto remove(instance::type_list auto list, auto f) {
+consteval auto remove(type_list_instance auto list, auto f) {
   if constexpr (f.template operator()<decltype(front(list))>())
     // return remove(pop_front(list), f);
     return remove(--list, f);
@@ -351,12 +343,12 @@ consteval auto remove(instance::type_list auto list, auto f) {
 ///
 template <size_t n>
   requires(n == 0)
-consteval auto trim_front(instance::type_list auto list) {
+consteval auto trim_front(type_list_instance auto list) {
   return list;
 }
 //
 template <size_t n>
-consteval auto trim_front(instance::type_list auto list)
+consteval auto trim_front(type_list_instance auto list)
   requires((0 < n) && (n <= size(list)))
 {
   return trim_front<n - 1>(pop_front(list));
@@ -366,12 +358,12 @@ consteval auto trim_front(instance::type_list auto list)
 ///
 template <size_t n>
   requires(n == 0)
-consteval auto trim_back(instance::type_list auto list) {
+consteval auto trim_back(type_list_instance auto list) {
   return list;
 }
 //
 template <size_t n>
-consteval auto trim_back(instance::type_list auto list)
+consteval auto trim_back(type_list_instance auto list)
   requires((0 < n) && (n <= size(list)))
 {
   return trim_back<n - 1>(pop_back(list));
@@ -380,7 +372,7 @@ consteval auto trim_back(instance::type_list auto list)
 /// Get a subrange of types from a 'type_list' instance.
 ///
 template <size_t first, size_t last>
-consteval auto range(instance::type_list auto list)
+consteval auto range(type_list_instance auto list)
   requires((first <= last) && (last <= size(list)))
 {
   constexpr auto n = size(list);
@@ -390,14 +382,14 @@ consteval auto range(instance::type_list auto list)
 /// Swap two types given by their position inside a 'type_list' instance.
 ///
 template <size_t i, size_t j>
-consteval auto swap(instance::type_list auto list)
+consteval auto swap(type_list_instance auto list)
   requires((i == j) && (j < size(list)))
 {
   return list;
 }
 //
 template <size_t i, size_t j>
-consteval auto swap(instance::type_list auto list)
+consteval auto swap(type_list_instance auto list)
   requires((i < j) && (j < size(list)))
 {
   constexpr auto n = size(list);
@@ -406,7 +398,7 @@ consteval auto swap(instance::type_list auto list)
 }
 //
 template <size_t i, size_t j>
-consteval auto swap(instance::type_list auto list)
+consteval auto swap(type_list_instance auto list)
   requires((j < i) && (i < size(list)))
 {
   return swap<j, i>(list);
@@ -414,16 +406,16 @@ consteval auto swap(instance::type_list auto list)
 
 /// Merge two sorted 'type_list' instances by using a 'less' predicate.
 ///
-consteval auto merge(instance::type_list auto left,
-                     instance::type_list auto right,
+consteval auto merge(type_list_instance auto left,
+                     type_list_instance auto right,
                      auto less)
   requires(empty(left) || empty(right))
 {
   return left + right;
 }
 //
-consteval auto merge(instance::type_list auto left,
-                     instance::type_list auto right,
+consteval auto merge(type_list_instance auto left,
+                     type_list_instance auto right,
                      auto less) {
   if constexpr (less.template  //
                 operator()<decltype(front(left)), decltype(front(right))>())
@@ -436,14 +428,14 @@ consteval auto merge(instance::type_list auto left,
 
 /// Sort a 'type_list' instance by using a 'less' predicate.
 ///
-consteval auto sort(instance::type_list auto list, auto less) {
+consteval auto sort(type_list_instance auto list, auto less) {
   constexpr auto n    = size(list);
   constexpr auto half = n / 2;
   return merge(sort(range<0, half>(list), less),
                sort(range<half, n>(list), less), less);
 }
 //
-consteval auto sort(instance::type_list auto list, auto less)
+consteval auto sort(type_list_instance auto list, auto less)
   requires(size(list) < 2)
 {
   return list;
@@ -470,7 +462,7 @@ constexpr auto for_each(type_list<types...>, auto f) {
 
 ///
 ///
-constexpr auto for_each_until(instance::type_list auto list, auto f) {
+constexpr auto for_each_until(type_list_instance auto list, auto f) {
   if constexpr (empty(list))
     return false;
   else {

@@ -4,10 +4,8 @@
 
 namespace ensketch::xstd {
 
-namespace generic {
+namespace detail {
 
-///
-///
 template <typename tuple_type, meta::string name>
 concept named_tuple_value_access = requires(tuple_type x) {
   {
@@ -15,57 +13,64 @@ concept named_tuple_value_access = requires(tuple_type x) {
   } -> std::convertible_to<typename tuple_type::template type<name>>;
 };
 
+}  // namespace detail
+
 /// Checks whether a given type fulfills the requirements of a generic tuple.
 ///
 template <typename tuple_type>
-concept named_tuple =
-    tuple<tuple_type> && for_all(tuple_type::names, []<meta::string name> {
-      return named_tuple_value_access<tuple_type, name>;
+concept generic_named_tuple =
+    generic_tuple<tuple_type> &&
+    for_all(tuple_type::names, []<meta::string name> {
+      return detail::named_tuple_value_access<tuple_type, name>;
     });
 
 ///
 ///
 template <typename T>
-concept reducible_named_tuple = named_tuple<reduction<T>>;
+concept generic_reducible_named_tuple = generic_named_tuple<meta::reduction<T>>;
 
 ///
 ///
 template <typename tuple_type>
-concept unnamed_tuple = tuple<tuple_type> && (!named_tuple<tuple_type>);
+concept generic_unnamed_tuple =
+    generic_tuple<tuple_type> && (!generic_named_tuple<tuple_type>);
 
 ///
 ///
 template <typename tuple_type>
-concept reducible_unnamed_tuple = unnamed_tuple<reduction<tuple_type>>;
+concept generic_reducible_unnamed_tuple =
+    generic_unnamed_tuple<meta::reduction<tuple_type>>;
 
-}  // namespace generic
-
-template <meta::name_list_instance identifiers, generic::tuple T>
+///
+///
+template <meta::name_list_instance identifiers, generic_tuple T>
   requires(size(identifiers{}) == std::tuple_size<T>::value)  //
 struct named_tuple;
 
 namespace detail {
+
 template <typename type>
 struct is_named_tuple : std::false_type {};
-template <meta::name_list_instance names, generic::tuple tuple_type>
-struct is_named_tuple<named_tuple<names, tuple_type>> : std::true_type {};
-}  // namespace detail
 
-namespace instance {
+template <meta::name_list_instance names, generic_tuple tuple_type>
+struct is_named_tuple<named_tuple<names, tuple_type>> : std::true_type {};
+
+}  // namespace detail
 
 ///
 ///
 template <typename type>
-concept named_tuple = xstd::detail::is_named_tuple<type>::value;
+concept named_tuple_instance = xstd::detail::is_named_tuple<type>::value;
 
 ///
 ///
 template <typename T>
-concept reducible_named_tuple = named_tuple<reduction<T>>;
+concept reducible_named_tuple_instance =
+    named_tuple_instance<meta::reduction<T>>;
 
-}  // namespace instance
-
-template <meta::name_list_instance identifiers, generic::tuple T>
+///
+///
+template <meta::name_list_instance identifiers, generic_tuple T>
   requires(size(identifiers{}) == std::tuple_size<T>::value)  //
 struct named_tuple : T {
   static constexpr auto names = identifiers{};
@@ -84,13 +89,13 @@ struct named_tuple : T {
   ///
   ///
   template <size_t... indices>
-  constexpr named_tuple(generic::reducible_unnamed_tuple auto&& x,
+  constexpr named_tuple(generic_reducible_unnamed_tuple auto&& x,
                         meta::index_list<indices...>) noexcept(  //
       noexcept(named_tuple(value<indices>(std::forward<decltype(x)>(x))...)))
       : named_tuple(value<indices>(std::forward<decltype(x)>(x))...) {}
   ///
   explicit constexpr named_tuple(
-      generic::reducible_unnamed_tuple auto&& x) noexcept(  //
+      generic_reducible_unnamed_tuple auto&& x) noexcept(  //
       noexcept(named_tuple(std::forward<decltype(x)>(x),
                            meta::index_list_from_iota<size()>())))
       : named_tuple(std::forward<decltype(x)>(x),
@@ -98,34 +103,34 @@ struct named_tuple : T {
 
   //
   template <meta::string... names>
-  constexpr named_tuple(generic::reducible_named_tuple auto&& x,
+  constexpr named_tuple(generic_reducible_named_tuple auto&& x,
                         meta::name_list<names...>) noexcept(                //
       noexcept(tuple_type(value<names>(std::forward<decltype(x)>(x))...)))  //
       : tuple_type(value<names>(std::forward<decltype(x)>(x))...) {}
 
   explicit constexpr named_tuple(
-      generic::reducible_named_tuple auto&& x) noexcept(  //
+      generic_reducible_named_tuple auto&& x) noexcept(  //
       noexcept(named_tuple(std::forward<decltype(x)>(x), names)))
       : named_tuple(std::forward<decltype(x)>(x), names) {}
 
   // Generic Copy/Move Construction
   //
   // explicit constexpr regular_tuple(
-  //     instance::reducible_regular_tuple auto&& x) noexcept(  //
+  //     reducible_regular_tuple_instance auto&& x) noexcept(  //
   //     noexcept(tuple_type(std::forward<decltype(x)>(x).tuple())))
   //     : tuple_type(std::forward<decltype(x)>(x).tuple()) {}
 
   // Generic Assignment Operator
   //
   constexpr named_tuple&
-  operator=(generic::reducible_unnamed_tuple auto&& x) noexcept(noexcept(
+  operator=(generic_reducible_unnamed_tuple auto&& x) noexcept(noexcept(
       static_cast<tuple_type&>(*this) = std::forward<decltype(x)>(x))) {
     static_cast<tuple_type&>(*this) = std::forward<decltype(x)>(x);
     return *this;
   }
 
   template <meta::string... names>
-  constexpr void assign(generic::reducible_named_tuple auto&& x,
+  constexpr void assign(generic_reducible_named_tuple auto&& x,
                         meta::name_list<names...>) noexcept(  //
       noexcept(static_cast<tuple_type&>(*this).assign(
           value<names>(std::forward<decltype(x)>(x))...))) {
@@ -134,7 +139,7 @@ struct named_tuple : T {
   }
 
   constexpr named_tuple&
-  operator=(generic::reducible_named_tuple auto&& x) noexcept(
+  operator=(generic_reducible_named_tuple auto&& x) noexcept(
       noexcept(assign(std::forward<decltype(x)>(x), names))) {
     assign(std::forward<decltype(x)>(x), names);
     return *this;
@@ -143,14 +148,14 @@ struct named_tuple : T {
   // We do not reorder types in here.
   // So, we can use the assign method of the base class.
   // template <size_t... indices>
-  // constexpr void assign(generic::reducible_tuple auto&& x,
+  // constexpr void assign(generic_reducible_tuple auto&& x,
   //                       index_list<indices...>) noexcept(  //
   //     noexcept(assign(get<indices>(std::forward<decltype(x)>(x))...))) {
   //   assign(get<indices>(std::forward<decltype(x)>(x))...);
   // }
 
   // constexpr regular_tuple& operator=(
-  //     generic::reducible_tuple auto&& x) noexcept(  //
+  //     generic_reducible_tuple auto&& x) noexcept(  //
   //     noexcept(assign(std::forward<decltype(x)>(x),
   //                     meta::index_list::iota<size()>{}))) {
   //   assign(std::forward<decltype(x)>(x),
@@ -192,28 +197,28 @@ struct named_tuple : T {
 
 template <size_t index>
 constexpr decltype(auto)
-value(instance::reducible_named_tuple auto&& t) noexcept(
+value(reducible_named_tuple_instance auto&& t) noexcept(
     noexcept(get<index>(std::forward<decltype(t)>(t).tuple()))) {
   return get<index>(std::forward<decltype(t)>(t).tuple());
 }
 
 template <meta::string name>
 constexpr decltype(auto) value(
-    instance::reducible_named_tuple auto&& t) noexcept {
+    reducible_named_tuple_instance auto&& t) noexcept {
   using type           = meta::reduction<decltype(t)>;
   constexpr auto names = type::names;
   return get<index<name>(names)>(std::forward<decltype(t)>(t).tuple());
 }
 
 template <meta::string... names>
-constexpr void for_each(generic::reducible_named_tuple auto&& t,
+constexpr void for_each(generic_reducible_named_tuple auto&& t,
                         auto&& f,
                         meta::name_list<names...>) {
   (f.template operator()<names>(value<names>(std::forward<decltype(t)>(t))),
    ...);
 }
 
-constexpr void for_each(generic::reducible_named_tuple auto&& x, auto&& f) {
+constexpr void for_each(generic_reducible_named_tuple auto&& x, auto&& f) {
   using tuple_type = meta::reduction<decltype(x)>;
   for_each(std::forward<decltype(x)>(x), std::forward<decltype(f)>(f),
            tuple_type::names);
@@ -223,8 +228,7 @@ constexpr void for_each(generic::reducible_named_tuple auto&& x, auto&& f) {
 /// Here, it is a simple wrapper function template for 'value'.
 ///
 template <size_t index>
-constexpr decltype(auto) get(
-    instance::reducible_named_tuple auto&& t) noexcept {
+constexpr decltype(auto) get(reducible_named_tuple_instance auto&& t) noexcept {
   return value<index>(std::forward<decltype(t)>(t));
 }
 
@@ -235,7 +239,7 @@ namespace std {
 /// Provides support for using structured bindings with tuple.
 ///
 template <ensketch::xstd::meta::name_list_instance names,
-          ensketch::xstd::generic::tuple tuple_type>
+          ensketch::xstd::generic_tuple tuple_type>
 struct tuple_size<ensketch::xstd::named_tuple<names, tuple_type>> {
   static constexpr size_t value = std::tuple_size<tuple_type>::value;
 };
@@ -244,7 +248,7 @@ struct tuple_size<ensketch::xstd::named_tuple<names, tuple_type>> {
 ///
 template <size_t index,
           ensketch::xstd::meta::name_list_instance names,
-          ensketch::xstd::generic::tuple tuple_type>
+          ensketch::xstd::generic_tuple tuple_type>
 struct tuple_element<index, ensketch::xstd::named_tuple<names, tuple_type>> {
   using type = typename std::tuple_element<index, tuple_type>::type;
 };

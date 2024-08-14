@@ -25,13 +25,16 @@ struct radix_tree {
 };
 
 namespace detail {
+
 template <typename type>
 struct is_radix_tree : std::false_type {};
+
 template <typename type>
 struct is_radix_tree<meta::radix_tree<type>> : std::true_type {};
+
 }  // namespace detail
 
-///
+/// Checks whether the given type is an instance of `radix_tree`.
 ///
 template <typename type>
 concept radix_tree_instance = detail::is_radix_tree<type>::value;

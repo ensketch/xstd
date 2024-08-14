@@ -11,10 +11,8 @@ namespace ensketch::xstd {
 // A concept for generic tuples is introduced,
 // utilizing structured bindings requirements for generalization.
 
-namespace generic {
+namespace detail {
 
-///
-///
 template <typename tuple_type, size_t index>
 concept tuple_get_access = requires(tuple_type value) {
   {
@@ -23,20 +21,6 @@ concept tuple_get_access = requires(tuple_type value) {
   -> std::convertible_to<typename std::tuple_element<index, tuple_type>::type>;
 };
 
-/// Checks whether a given type fulfills the requirements of a generic tuple.
-///
-template <typename tuple_type>
-concept tuple =
-    for_all(meta::index_list_from_iota<std::tuple_size<tuple_type>::value>(),
-            []<size_t index> { return tuple_get_access<tuple_type, index>; });
-
-///
-///
-template <typename T>
-concept reducible_tuple = tuple<reduction<T>>;
-
-///
-///
 template <typename tuple_type, size_t index>
 concept xstd_tuple_value_access = requires(tuple_type tuple) {
   {
@@ -46,30 +30,45 @@ concept xstd_tuple_value_access = requires(tuple_type tuple) {
   // For an array, you would not want to provide a type list.
 };
 
-///
+}  // namespace detail
+
+/// Checks whether a given type fulfills the requirements of a generic tuple.
 ///
 template <typename tuple_type>
-concept xstd_tuple = for_all(
-    meta::index_list_from_iota<tuple_type::size()>(),  //
-    []<size_t index> { return xstd_tuple_value_access<tuple_type, index>; });
+concept generic_tuple = for_all(
+    meta::index_list_from_iota<std::tuple_size<tuple_type>::value>(),
+    []<size_t index> { return detail::tuple_get_access<tuple_type, index>; });
+
+///
+///
+template <typename T>
+concept generic_reducible_tuple = generic_tuple<meta::reduction<T>>;
 
 ///
 ///
 template <typename tuple_type>
-concept reducible_xstd_tuple = xstd_tuple<reduction<tuple_type>>;
+concept generic_xstd_tuple =
+    for_all(meta::index_list_from_iota<tuple_type::size()>(),  //
+            []<size_t index> {
+              return detail::xstd_tuple_value_access<tuple_type, index>;
+            });
 
-}  // namespace generic
+///
+///
+template <typename tuple_type>
+concept generic_reducible_xstd_tuple =
+    generic_xstd_tuple<meta::reduction<tuple_type>>;
 
 ///
 ///
 // A tuple type is not a tag type and as such should be given as template argument.
-template <generic::tuple tuple_type, size_t... indices>
+template <generic_tuple tuple_type, size_t... indices>
 consteval auto type_list_from(meta::index_list<indices...>) {
   return meta::type_list<
       typename std::tuple_element<indices, tuple_type>::type...>{};
 }
 //
-template <generic::tuple tuple_type>
+template <generic_tuple tuple_type>
 consteval auto type_list_from() {
   return type_list_from<tuple_type>(
       meta::index_list_from_iota<std::tuple_size<tuple_type>::value>());
@@ -78,13 +77,13 @@ consteval auto type_list_from() {
 ///
 ///
 template <size_t... indices>
-constexpr auto for_each(generic::reducible_tuple auto&& tuple,
+constexpr auto for_each(generic_reducible_tuple auto&& tuple,
                         auto&& f,
                         meta::index_list<indices...>) {
   (f(get<indices>(std::forward<decltype(tuple)>(tuple))), ...);
 }
 //
-constexpr auto for_each(generic::reducible_tuple auto&& tuple, auto&& f) {
+constexpr auto for_each(generic_reducible_tuple auto&& tuple, auto&& f) {
   using tuple_type = meta::reduction<decltype(tuple)>;
   for_each(std::forward<decltype(tuple)>(tuple), std::forward<decltype(f)>(f),
            meta::index_list_from_iota<std::tuple_size<tuple_type>::value>());

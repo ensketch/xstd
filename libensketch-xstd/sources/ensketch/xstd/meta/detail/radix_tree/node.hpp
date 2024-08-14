@@ -24,7 +24,7 @@ constexpr bool is_node = is_node_implementation<type>::value;
 ///
 template <typename list>
 constexpr bool is_node_list =
-    instance::type_list<list> &&
+    type_list_instance<list> &&
     for_all(list{}, []<typename type> { return is_node<type>; });
 
 /// This concept checks whether a given type is an instance of 'node'.

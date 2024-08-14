@@ -3,21 +3,23 @@
 
 namespace ensketch::xstd::meta {
 
-/// The 'index_list' template is a specialized alias of 'value_list'.
-/// It requires that every contained value is of type 'size_t'.
+/// 'index_list' is a constrained alias of 'value_list'
+/// that only contains values of type 'size_t'.
 ///
 template <size_t... indices>
 using index_list = value_list<indices...>;
 
 namespace detail {
+
 template <typename type>
 struct is_index_list : std::false_type {};
+
 template <size_t... indices>
 struct is_index_list<index_list<indices...>> : std::true_type {};
+
 }  // namespace detail
 
-/// This concept checks whether the given type
-/// is an instance of the 'index_list' template.
+/// Check whether the given type is an instance of 'index_list'.
 ///
 template <typename T>
 concept index_list_instance = detail::is_index_list<T>::value;

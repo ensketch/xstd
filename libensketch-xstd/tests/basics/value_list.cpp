@@ -4,16 +4,16 @@
 // to access all its functions by making use of ADL.
 //
 using ensketch::xstd::meta::value_list;
+using ensketch::xstd::meta::value_list_instance;
 
 // Check if a given type is an instance of the 'value_list' template.
 //
-namespace instance = ensketch::xstd::meta::instance;
-static_assert(instance::value_list<value_list<>>);
-static_assert(instance::value_list<value_list<-1>>);
-static_assert(instance::value_list<value_list<'c', -1>>);
-static_assert(instance::value_list<value_list<-1, 1u, 'c'>>);
+static_assert(value_list_instance<value_list<>>);
+static_assert(value_list_instance<value_list<-1>>);
+static_assert(value_list_instance<value_list<'c', -1>>);
+static_assert(value_list_instance<value_list<-1, 1u, 'c'>>);
 static_assert(
-    instance::value_list<value_list<-1, 1u, 'c', value_list<-1, 'c'>{}>>);
+    value_list_instance<value_list<-1, 1u, 'c', value_list<-1, 'c'>{}>>);
 
 // Get the number of types inside a type list.
 //
