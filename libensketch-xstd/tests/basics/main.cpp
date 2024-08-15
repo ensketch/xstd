@@ -1,7 +1,8 @@
 #include <iomanip>
 #include <iostream>
+#include <print>
 //
-#include <ensketch/xstd/meta/radix_tree.hpp>
+#include <ensketch/xstd/meta/meta.hpp>
 
 using ensketch::xstd::czstring;
 using namespace ensketch::xstd;
@@ -117,6 +118,42 @@ inline void print_traverse(radix_tree_instance auto tree, czstring cstr) {
          << " has no known prefix inside the static radix tree." << endl;
 }
 
+template <typename... types>
+struct std::formatter<meta::type_list<types...>, char> {
+  template <class context>
+  constexpr auto parse(context& ctx) -> context::iterator {
+    return ctx.begin();
+  }
+  template <class context>
+  auto format(meta::type_list<types...> list,
+              context& ctx) const -> context::iterator {
+    std::string str{};
+    for_each(list, [&str]<typename type> { str += typeid(type).name(); });
+    return ranges::copy(str, ctx.out()).out;
+  }
+};
+
+template <auto... values>
+struct std::formatter<meta::value_list<values...>, char> {
+  template <class context>
+  constexpr auto parse(context& ctx) -> context::iterator {
+    return ctx.begin();
+  }
+  template <class context>
+  auto format(meta::value_list<values...> list,
+              context& ctx) const -> context::iterator {
+    std::string str{};
+    for_each(list, [&str]<auto value> {
+      // str += std::format("{}: {}, ", value, typeid(value).name());
+      str += value;
+      str += ": ";
+      str += typeid(value).name();
+      str += ", ";
+    });
+    return ranges::copy(str, ctx.out()).out;
+  }
+};
+
 int main() {
   using detail::radix_tree::leaf;
   using detail::radix_tree::node;
@@ -147,4 +184,11 @@ int main() {
   print_traverse(tree, "hela");
   print_traverse(tree, "key=uiae");
   print_traverse(tree, "xyz");
+
+  constexpr auto list = type_list<int, float, std::string, type_list<>>{};
+  print("{}\n", list);
+
+  constexpr auto vlist = value_list<1, 'c', 1.23f, "hello"_xs>{};
+  print("{}\n", vlist);
+  // meta::print_type(list);
 }

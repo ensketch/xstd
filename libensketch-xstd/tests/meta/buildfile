@@ -1,0 +1,7 @@
+import xstd = libensketch-xstd%lib{ensketch-xstd}
+
+for x: cxx{**}
+{
+  n = $name($x)
+  ./: exe{$n}: $x $xstd
+}
