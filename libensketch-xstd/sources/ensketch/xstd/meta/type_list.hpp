@@ -3,7 +3,7 @@
 
 namespace ensketch::xstd::meta {
 
-/// The 'type_list' template is a utility for template meta programming.
+/// The 'type_list' template is a template meta programming utility.
 /// Within a 'type_list', packaging, accessing, and modifying types
 /// originally given by variadic template parameters is possible.
 /// All 'type_list' instances are empty and can be used as tag types.
@@ -35,7 +35,50 @@ template <typename type>
 concept type_list_instance = detail::is_type_list<type>::value;
 
 ///
-/// Ordering
+/// Representing Types by Values
+///
+
+/// Types cannot be returned by standard functions directly.
+/// Instead, `type_wrapper` can be used to wrap a type
+/// and generate a value by default construction.
+/// Using this approach based on tag types,
+/// allows to use types as simple values (also for comparison).
+///
+template <typename type>
+using type_wrapper = type_list<type>;
+
+namespace detail {
+
+template <typename type>
+struct is_type_wrapper : std::false_type {};
+
+template <typename type>
+struct is_type_wrapper<type_wrapper<type>> : std::true_type {};
+
+}  // namespace detail
+
+/// Checks whether given type is an instance of `type_wrapper`.
+///
+template <typename type>
+concept type_wrapper_instance = detail::is_type_wrapper<type>::value;
+
+/// Receive a type as value wrapped by `type_wrapper'.
+///
+template <typename type>
+inline constexpr auto value = type_wrapper<type>{};
+
+namespace detail {
+template <typename type>
+consteval auto unwrap(type_list<type>) -> type;
+}  // namespace detail
+
+/// Receive the wrapped type of a given `type_list` instance object.
+///
+template <type_wrapper_instance auto x>
+using unwrap = decltype(detail::unwrap(x));
+
+///
+/// Equality and Inequality
 ///
 
 /// Check whether two instances of 'type_list' are the same.
@@ -55,71 +98,6 @@ consteval auto operator==(list, list) {
 consteval auto operator!=(type_list_instance auto x,
                           type_list_instance auto y) {
   return !(x == y);
-}
-
-///
-/// Predicates
-///
-
-/// Returns the size of a given 'type_list' instance.
-///
-template <typename... types>
-consteval auto size(type_list<types...>) -> size_t {
-  return sizeof...(types);
-}
-
-/// Check whether a condition provided by a 'constexpr' predicate
-/// holds for all types inside a 'type_list' instance.
-///
-template <typename... types>
-consteval auto for_all(type_list<types...>, auto f) {
-  return (f.template operator()<types>() && ...);
-}
-
-/// Check whether a condition provided by a 'constexpr' predicate
-/// holds for at least one type inside a 'type_list' instance.
-///
-template <typename... types>
-consteval auto exists(type_list<types...>, auto f) {
-  return (f.template operator()<types>() || ...);
-}
-
-/// Check whether a given 'type_list' instance contains no types.
-///
-consteval auto empty(type_list_instance auto list) {
-  return size(list) == 0;
-}
-
-/// Check whether a given type is contained
-/// inside a given 'type_list' instance.
-///
-// template <typename type, typename... types>
-// consteval auto contains(type_list<types...>) {
-//   return (meta::equal<type, types> || ...);
-// }
-template <typename type>
-consteval auto contains(type_list_instance auto list) {
-  return exists(list, []<typename t> { return meta::equal<t, type>; });
-}
-
-/// Check whether a given 'type_list' slice
-/// is contained inside a 'type_list' instance.
-///
-template <typename type>
-consteval auto contains(type_list_instance auto list, type_list<type>) {
-  return contains<type>(list);
-}
-
-///
-///
-consteval bool is_set(type_list<>) {
-  return true;
-}
-//
-template <typename type, typename... types>
-consteval bool is_set(type_list<type, types...>) {
-  constexpr auto tail = type_list<types...>{};
-  return !contains<type>(tail) && is_set(tail);
 }
 
 ///
@@ -200,6 +178,85 @@ consteval auto back_slice(type_list_instance auto list)
 //
 consteval auto operator!(type_list_instance auto list) {
   return back_slice(list);
+}
+
+///
+/// Predicates
+///
+
+/// Returns the size of a given 'type_list' instance.
+///
+template <typename... types>
+consteval auto size(type_list<types...>) -> size_t {
+  return sizeof...(types);
+}
+
+template <typename functor, typename type>
+concept generic_type_predicate = requires(functor f) {
+  { f.template operator()<type>() } -> std::same_as<bool>;
+};
+template <typename functor, typename... types>
+concept generic_types_predicate =
+    (generic_type_predicate<functor, types> && ...);
+
+template <typename functor, typename list>
+concept generic_predicate =
+    type_list_instance<list> && all_of<list>([]<typename type> {
+      return generic_type_predicate<functor, type>;
+    });
+
+/// Check whether a condition provided by a 'constexpr' predicate
+/// holds for all types inside a 'type_list' instance.
+///
+template <typename... types>
+consteval auto for_all(type_list<types...>, auto f) {
+  return (f.template operator()<types>() && ...);
+}
+
+/// Check whether a condition provided by a 'constexpr' predicate
+/// holds for at least one type inside a 'type_list' instance.
+///
+template <typename... types>
+consteval auto exists(type_list<types...>, auto f) {
+  return (f.template operator()<types>() || ...);
+}
+
+/// Check whether a given 'type_list' instance contains no types.
+///
+consteval auto empty(type_list_instance auto list) {
+  return size(list) == 0;
+}
+
+/// Check whether a given type is contained
+/// inside a given 'type_list' instance.
+///
+// template <typename type, typename... types>
+// consteval auto contains(type_list<types...>) {
+//   return (meta::equal<type, types> || ...);
+// }
+template <typename type>
+consteval auto contains(type_list_instance auto list) {
+  return exists(list, []<typename t> { return meta::equal<t, type>; });
+}
+
+/// Check whether a given 'type_list' slice
+/// is contained inside a 'type_list' instance.
+///
+template <typename type>
+consteval auto contains(type_list_instance auto list, type_list<type>) {
+  return contains<type>(list);
+}
+
+///
+///
+consteval bool is_set(type_list<>) {
+  return true;
+}
+//
+template <typename type, typename... types>
+consteval bool is_set(type_list<type, types...>) {
+  constexpr auto tail = type_list<types...>{};
+  return !contains<type>(tail) && is_set(tail);
 }
 
 ///
@@ -444,12 +501,83 @@ consteval auto sort(type_list_instance auto list, auto less)
   return list;
 }
 
+template <typename functor, typename type>
+concept transform_type_to_wrapper = requires(functor f) {
+  { f.template operator()<type>() } -> type_wrapper_instance;
+};
+template <typename functor, typename... types>
+concept type_to_wrapper_transformer =
+    (transform_type_to_wrapper<functor, types> && ...);
+
+template <typename functor, typename type>
+concept transform_slice = requires(functor f) {
+  { f.template operator()<type>() } -> type_list_instance;
+};
+template <typename functor, typename... types>
+concept slice_transformer = (transform_slice<functor, types> && ...);
+
+// template <typename functor, typename... types>
+// concept generic_types_transformer =
+//     (generic_type_transform<functor, types> && ...);
+
+// template <typename functor, typename list>
+// concept generic_type_transformer =
+//     type_list_instance<list> && for_all(list{}, []<typename type> {
+//       return generic_type_transform<functor, type>;
+//     });
+
+// template <typename functor, size_t index, typename type>
+// concept generic_pair_transform =
+//     requires(functor f) { f.template operator()<index, type>(); };
+
+// template <typename functor, typename list>
+// concept generic_pair_transformer =
+//     type_list_instance<list> && for_all(list{}, []<typename type> {
+//       return generic_type_transform<functor, index, type>;
+//     });
+
 ///
 ///
 template <typename... types>
-consteval auto transform(type_list<types...>, auto f) {
+consteval auto transform(type_list<types...>,
+                         slice_transformer<types...> auto f) {
   // f needs to return slices
   return (f.template operator()<types>() + ...);
+}
+
+// template <typename... types>
+// consteval auto transform(type_list<types...>,
+//                          type_to_wrapper_transformer<types...> auto f) {
+//   return type_list<unwrap<f.template operator()<types>()>...> {};
+// }
+
+///
+///
+// template <typename... types>
+// constexpr auto transform_and_fold(type_list<types...>,
+//                                   auto&& transform,
+//                                   auto&& fold) {
+//   using result_type =
+//       decltype(std::invoke(std::forward<decltype(fold)>(fold),
+//                            transform.template operator()<types>()...));
+//   if constexpr (meta::equal<void, result_type>)
+//     std::invoke(std::forward<decltype(fold)>(fold),
+//                 transform.template operator()<types>()...);
+//   else
+//     return std::invoke(std::forward<decltype(fold)>(fold),
+//                        transform.template operator()<types>()...);
+// }
+
+///
+///
+template <template <typename...> typename x, typename... types>
+consteval auto transform(type_list<types...>) {
+  return meta::value<x<types...>>;
+}
+
+template <typename... types>
+consteval auto pack_call(type_list<types...>, auto f) {
+  return f.template operator()<types...>();
 }
 
 ///

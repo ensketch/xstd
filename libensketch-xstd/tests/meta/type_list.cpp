@@ -22,6 +22,13 @@ constexpr auto string_from<std::string>() {
   return "std::string";
 }
 
+// static_assert(transform(type_list<float, void, int>{}, []<typename x> {
+//                 if constexpr (equal<x, void>)
+//                   return type_list<type_list<>>{};
+//                 else
+//                   return type_list<x>{};
+//               }) == type_list<float, type_list<>, int>{});
+
 int main() {
   constexpr auto types = meta::type_list<int, float, std::string>{};
 
@@ -36,4 +43,16 @@ int main() {
     str += std::format(", ");
   });
   std::print("types = {}\n", str);
+
+  // meta::print_type(transform_and_fold(
+  //     types, []<typename type> { return meta::value<type>; },
+  //     [](auto... args) { return std::tuple<meta::unwrap<args>...>{}; }));
+
+  // meta::print_type<meta::unwrap<transform<std::variant>(types)>>();
+  // meta::print_type(transform(types, []<typename type> {
+  //   if constexpr (meta::equal<type, int>)
+  //     return meta::value<type>;
+  //   else
+  //     return meta::type_list<type>{};
+  // }));
 }
