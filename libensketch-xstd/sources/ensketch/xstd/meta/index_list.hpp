@@ -51,7 +51,7 @@ consteval auto index_list_from_iota() {
 ///
 template <size_t bound>
 consteval bool bounded(index_list_instance auto list) {
-  return for_all(list, []<size_t x> { return x < bound; });
+  return all_of(list, []<size_t x> { return x < bound; });
 }
 
 }  // namespace ensketch::xstd::meta

@@ -170,31 +170,34 @@ consteval auto back(list x)
   return element<size(list{}) - 1>(x);
 }
 
-/// Checks whether a given functor can be applied as type predicate
-/// to all given types returning `true` or `false`.
-///
 namespace detail {
+
 template <typename functor, typename type>
 concept type_predicate_for = requires(functor f) {
   { f.template operator()<type>() } -> std::same_as<bool>;
 };
+
+template <typename functor, typename... types>
+consteval bool type_predicate_for_type_list(type_list<types...>) {
+  return (type_predicate_for<functor, types> && ...);
+}
+
 }  // namespace detail
-//
+
+/// Check whether a given functor can be applied as type predicate
+/// to all given types returning `true` or `false`.
+///
 template <typename functor, typename... types>
 concept type_predicate_for =
     (detail::type_predicate_for<functor, types> && ...);
 
-/// Checks whether a given functor can be applied as type predicate
+/// Check whether a given functor can be applied as type predicate
 /// to all given types contained in a given `type_list` instance.
 ///
-template <typename functor, typename... types>
-consteval bool is_type_list_type_predicate(type_list<types...>) {
-  return type_predicate_for<functor, types...>;
-}
-//
 template <typename functor, typename list>
-concept type_list_type_predicate =
-    type_list_instance<list> && is_type_list_type_predicate(list{});
+concept type_predicate_for_type_list =
+    type_list_instance<list> &&
+    detail::type_predicate_for_type_list<functor>(list{});
 
 /// Check whether a condition provided by a type predicate holds
 /// for all types inside the given 'type_list' instance.
@@ -215,7 +218,7 @@ consteval auto any_of(type_list<types...>,
 }
 
 /// Check whether a condition provided by a type predicate holds
-/// for none of the contained types inside the given `type_list` instance.
+/// for none of the types inside the given `type_list` instance.
 ///
 template <typename... types>
 consteval auto none_of(type_list<types...>,
@@ -386,7 +389,7 @@ consteval auto insert(type_list_instance auto list)
     return *list + insert<index - 1, type>(--list);
 }
 
-/// Insert a type into a 'type_list' instance by using predicate.
+/// Insert a type into a 'type_list' instance by using a predicate.
 ///
 template <typename type>
 consteval auto insert(type_list<>, auto less) {

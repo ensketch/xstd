@@ -33,51 +33,43 @@ static_assert(!empty(value_list<-1, 'c', 1u>{}));
 // Check if a condition holds for all types.
 //
 constexpr auto bigger_one = []<auto x> { return x > 1; };
-static_assert(for_all(value_list<>{}, bigger_one));
-static_assert(!for_all(value_list<-1>{}, bigger_one));
-static_assert(for_all(value_list<'c'>{}, bigger_one));
-static_assert(!for_all(value_list<-1, 2u>{}, bigger_one));
-static_assert(!for_all(value_list<-1, 'c'>{}, bigger_one));
-static_assert(for_all(value_list<2u, 'c'>{}, bigger_one));
+static_assert(all_of(value_list<>{}, bigger_one));
+static_assert(!all_of(value_list<-1>{}, bigger_one));
+static_assert(all_of(value_list<'c'>{}, bigger_one));
+static_assert(!all_of(value_list<-1, 2u>{}, bigger_one));
+static_assert(!all_of(value_list<-1, 'c'>{}, bigger_one));
+static_assert(all_of(value_list<2u, 'c'>{}, bigger_one));
 
 // Check if a value exists inside the list with a certain condition.
 //
-static_assert(!exists(value_list<>{}, bigger_one));
-static_assert(exists(value_list<'c'>{}, bigger_one));
-static_assert(!exists(value_list<-1>{}, bigger_one));
-static_assert(exists(value_list<2u>{}, bigger_one));
-static_assert(!exists(value_list<-2, -1>{}, bigger_one));
-static_assert(exists(value_list<'c', -1>{}, bigger_one));
-static_assert(exists(value_list<-1, 2u>{}, bigger_one));
+static_assert(!any_of(value_list<>{}, bigger_one));
+static_assert(any_of(value_list<'c'>{}, bigger_one));
+static_assert(!any_of(value_list<-1>{}, bigger_one));
+static_assert(any_of(value_list<2u>{}, bigger_one));
+static_assert(!any_of(value_list<-2, -1>{}, bigger_one));
+static_assert(any_of(value_list<'c', -1>{}, bigger_one));
+static_assert(any_of(value_list<-1, 2u>{}, bigger_one));
 
 // Check if a 'value_list' instance contains a specific type.
 //
-static_assert(!contains(value_list<>{}, -1));
-static_assert(!contains(value_list<>{}, 'c'));
-static_assert(contains(value_list<-1>{}, -1));
-static_assert(!contains(value_list<'c'>{}, -1));
-static_assert(contains(value_list<-1, 'c'>{}, -1));
-static_assert(contains(value_list<-1, 'c'>{}, 'c'));
-static_assert(!contains(value_list<-1, 'c'>{}, 2u));
-//
-static_assert(!(value_list<>{} | ensketch::xstd::meta::contains(-1)));
-static_assert(!(value_list<>{} | ensketch::xstd::meta::contains('c')));
-static_assert((value_list<-1>{} | ensketch::xstd::meta::contains(-1)));
-static_assert(!(value_list<'c'>{} | ensketch::xstd::meta::contains(-1)));
-static_assert((value_list<-1, 'c'>{} | ensketch::xstd::meta::contains(-1)));
-static_assert((value_list<-1, 'c'>{} | ensketch::xstd::meta::contains('c')));
-static_assert(!(value_list<-1, 'c'>{} | ensketch::xstd::meta::contains(2u)));
+static_assert(!contained(value_list<>{}, -1));
+static_assert(!contained(value_list<>{}, 'c'));
+static_assert(contained(value_list<-1>{}, -1));
+static_assert(!contained(value_list<'c'>{}, -1));
+static_assert(contained(value_list<-1, 'c'>{}, -1));
+static_assert(contained(value_list<-1, 'c'>{}, 'c'));
+static_assert(!contained(value_list<-1, 'c'>{}, 2u));
 
 // Check whether the given value list is a set
 //
-static_assert(is_set(value_list<>{}));
-static_assert(is_set(value_list<-1>{}));
-static_assert(is_set(value_list<'c'>{}));
+static_assert(elementwise_unique(value_list<>{}));
+static_assert(elementwise_unique(value_list<-1>{}));
+static_assert(elementwise_unique(value_list<'c'>{}));
 //
-static_assert(is_set(value_list<-1, 'c'>{}));
-static_assert(is_set(value_list<'c', -1>{}));
-static_assert(!is_set(value_list<'c', 'c'>{}));
-static_assert(!is_set(value_list<-1, -1>{}));
+static_assert(elementwise_unique(value_list<-1, 'c'>{}));
+static_assert(elementwise_unique(value_list<'c', -1>{}));
+static_assert(!elementwise_unique(value_list<'c', 'c'>{}));
+static_assert(!elementwise_unique(value_list<-1, -1>{}));
 
 // Access values of a 'value_list' instance by their index.
 //

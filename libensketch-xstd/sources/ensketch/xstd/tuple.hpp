@@ -35,7 +35,7 @@ concept xstd_tuple_value_access = requires(tuple_type tuple) {
 /// Checks whether a given type fulfills the requirements of a generic tuple.
 ///
 template <typename tuple_type>
-concept generic_tuple = for_all(
+concept generic_tuple = all_of(
     meta::index_list_from_iota<std::tuple_size<tuple_type>::value>(),
     []<size_t index> { return detail::tuple_get_access<tuple_type, index>; });
 
@@ -48,10 +48,10 @@ concept generic_reducible_tuple = generic_tuple<meta::reduction<T>>;
 ///
 template <typename tuple_type>
 concept generic_xstd_tuple =
-    for_all(meta::index_list_from_iota<tuple_type::size()>(),  //
-            []<size_t index> {
-              return detail::xstd_tuple_value_access<tuple_type, index>;
-            });
+    all_of(meta::index_list_from_iota<tuple_type::size()>(),  //
+           []<size_t index> {
+             return detail::xstd_tuple_value_access<tuple_type, index>;
+           });
 
 ///
 ///

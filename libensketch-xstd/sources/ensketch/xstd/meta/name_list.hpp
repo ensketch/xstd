@@ -8,7 +8,7 @@ namespace ensketch::xstd::meta {
 /// which are unique among all contained values.
 ///
 template <string... strings>
-  requires(is_set(string_list<strings...>{}))
+  requires(elementwise_unique(string_list<strings...>{}))
 using name_list = string_list<strings...>;
 
 namespace detail {
