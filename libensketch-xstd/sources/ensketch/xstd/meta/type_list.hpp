@@ -38,6 +38,14 @@ concept type_list_instance = detail::is_type_list<type>::value;
 /// Representing Types by Values
 ///
 
+/// Receive any amount of given types as a single value
+/// by wrapping with 'type_list' and using default construction.
+///
+template <typename... types>
+inline constexpr auto as_value = type_list<types...>{};
+
+/// `type_wrapper` is a constrained alias of `type_list`
+/// that only allows for a single contained type.
 /// Types cannot be returned by standard functions directly.
 /// Instead, `type_wrapper` can be used to wrap a type
 /// and generate a value by default construction.
@@ -62,20 +70,15 @@ struct is_type_wrapper<type_wrapper<type>> : std::true_type {};
 template <typename type>
 concept type_wrapper_instance = detail::is_type_wrapper<type>::value;
 
-/// Receive a type as value wrapped by `type_wrapper'.
-///
-template <typename type>
-inline constexpr auto value = type_wrapper<type>{};
-
 namespace detail {
 template <typename type>
 consteval auto unwrap(type_list<type>) -> type;
 }  // namespace detail
 
-/// Receive the wrapped type of a given `type_list` instance object.
+/// Receive the wrapped type of a given `type_wrapper` instance object.
 ///
 template <type_wrapper_instance auto x>
-using unwrap = decltype(detail::unwrap(x));
+using as_type = decltype(detail::unwrap(x));
 
 ///
 /// Equality and Inequality
@@ -101,167 +104,173 @@ consteval auto operator!=(type_list_instance auto x,
 }
 
 ///
-/// Accessors
+/// Accessors and Predicates
+///
+/// Retrieve information from a given `type_list`
+/// instance without changing its content.
+/// Predicates can be viewed as accessors that return a boolean value.
 ///
 
-/// Access a specific type of a 'type_list' instance by its index.
-///
-template <size_t index>
-auto element(type_list<>) = delete;
-//
-template <size_t index, typename type, typename... types>
-auto element(type_list<type, types...> list)
-    -> decltype(element<index - 1>(type_list<types...>{}))
-  requires((0 < index) && (index < size(list)));
-//
-template <size_t index, typename type, typename... types>
-auto element(type_list<type, types...>) -> type
-  requires(index == 0);
-
-///
-///
-template <typename type>
-consteval auto index(type_list_instance auto list) -> size_t
-  requires(!empty(list)) && (is_set(list)) && (contains<type>(list))
-{
-  if constexpr (meta::equal<type, decltype(front(list))>)
-    return 0;
-  else
-    return 1 + index<type>(--list);
-}
-
-/// Access a specific type of a 'type_list' instance by its index.
-/// The result type is wrapped by the 'type_list' template
-/// and returned as a slice of the given 'type_list' instance.
-///
-template <size_t index>
-consteval auto slice(type_list_instance auto list) {
-  return type_list<decltype(element<index>(list))>{};
-}
-
-/// Access the first element of a 'type_list' instance.
-/// This function leads to compile errors
-/// if the given 'type_list' instance is empty.
-///
-auto front(type_list_instance auto list) -> decltype(element<0>(list))
-  requires(!empty(list));
-
-/// Access the first element of a 'type_list' instance.
-/// The result type is wrapped by the 'type_list' template
-/// and returned as a slice of the given 'type_list' instance.
-///
-consteval auto front_slice(type_list_instance auto list)
-  requires(!empty(list))
-{
-  return type_list<decltype(front(list))>{};
-}
-//
-consteval auto operator*(type_list_instance auto list) {
-  return front_slice(list);
-}
-
-/// Access the last element of a 'type_list' instance.
-///
-template <type_list_instance list>
-auto back(list x) -> decltype(element<size(list{}) - 1>(x))
-  requires(!empty(x));
-
-/// Access the last element of a 'type_list' instance.
-/// The result type is wrapped by the 'type_list' template
-/// and returned as a slice of the given 'type_list' instance.
-///
-consteval auto back_slice(type_list_instance auto list)
-  requires(!empty(list))
-{
-  return type_list<decltype(back(list))>{};
-}
-//
-consteval auto operator!(type_list_instance auto list) {
-  return back_slice(list);
-}
-
-///
-/// Predicates
-///
-
-/// Returns the size of a given 'type_list' instance.
+/// Return the size of a given 'type_list' instance.
 ///
 template <typename... types>
 consteval auto size(type_list<types...>) -> size_t {
   return sizeof...(types);
 }
 
-template <typename functor, typename type>
-concept generic_type_predicate = requires(functor f) {
-  { f.template operator()<type>() } -> std::same_as<bool>;
-};
-template <typename functor, typename... types>
-concept generic_types_predicate =
-    (generic_type_predicate<functor, types> && ...);
-
-template <typename functor, typename list>
-concept generic_predicate =
-    type_list_instance<list> && all_of<list>([]<typename type> {
-      return generic_type_predicate<functor, type>;
-    });
-
-/// Check whether a condition provided by a 'constexpr' predicate
-/// holds for all types inside a 'type_list' instance.
-///
-template <typename... types>
-consteval auto for_all(type_list<types...>, auto f) {
-  return (f.template operator()<types>() && ...);
-}
-
-/// Check whether a condition provided by a 'constexpr' predicate
-/// holds for at least one type inside a 'type_list' instance.
-///
-template <typename... types>
-consteval auto exists(type_list<types...>, auto f) {
-  return (f.template operator()<types>() || ...);
-}
-
-/// Check whether a given 'type_list' instance contains no types.
+/// Check whether a given 'type_list' instance contains nothing.
 ///
 consteval auto empty(type_list_instance auto list) {
   return size(list) == 0;
 }
 
+/// Access a specific element of a 'type_list' instance by its index.
+/// The function returns a contained type as value by using `type_wrapper`
+///
+template <size_t index>
+consteval auto element(type_list<>) = delete;
+//
+template <size_t index, typename type, typename... types>
+  requires(index == 0)
+consteval auto element(type_list<type, types...>) {
+  return as_value<type>;
+}
+//
+template <size_t index, typename type, typename... types>
+consteval auto element(type_list<type, types...> list)
+  requires((0 < index) && (index < size(list)))
+{
+  return element<index - 1>(as_value<types...>);
+}
+
+/// Access the first element of a 'type_list' instance.
+/// The returned type is represented by a `type_wrapper` instance.
+/// This function leads to compile errors
+/// if the given 'type_list' instance is empty.
+///
+consteval auto front(type_list_instance auto list)
+  requires(!empty(list))
+{
+  return element<0>(list);
+}
+//
+consteval auto operator*(type_list_instance auto list) {
+  return front(list);
+}
+
+/// Access the last element of a 'type_list' instance.
+/// The returned type is represented by a `type_wrapper` instance.
+/// This function leads to compile errors
+/// if the given 'type_list' instance is empty.
+///
+template <type_list_instance list>
+consteval auto back(list x)
+  requires(!empty(x))
+{
+  return element<size(list{}) - 1>(x);
+}
+
+/// Checks whether a given functor can be applied as type predicate
+/// to all given types returning `true` or `false`.
+///
+namespace detail {
+template <typename functor, typename type>
+concept type_predicate_for = requires(functor f) {
+  { f.template operator()<type>() } -> std::same_as<bool>;
+};
+}  // namespace detail
+//
+template <typename functor, typename... types>
+concept type_predicate_for =
+    (detail::type_predicate_for<functor, types> && ...);
+
+/// Checks whether a given functor can be applied as type predicate
+/// to all given types contained in a given `type_list` instance.
+///
+template <typename functor, typename... types>
+consteval bool is_type_list_type_predicate(type_list<types...>) {
+  return type_predicate_for<functor, types...>;
+}
+//
+template <typename functor, typename list>
+concept type_list_type_predicate =
+    type_list_instance<list> && is_type_list_type_predicate(list{});
+
+/// Check whether a condition provided by a type predicate holds
+/// for all types inside the given 'type_list' instance.
+///
+template <typename... types>
+consteval auto all_of(type_list<types...>,
+                      type_predicate_for<types...> auto&& f) {
+  return (f.template operator()<types>() && ...);
+}
+
+/// Check whether a condition provided by a type predicate holds
+/// for at least one type inside the given 'type_list' instance.
+///
+template <typename... types>
+consteval auto any_of(type_list<types...>,
+                      type_predicate_for<types...> auto&& f) {
+  return (f.template operator()<types>() || ...);
+}
+
+/// Check whether a condition provided by a type predicate holds
+/// for none of the contained types inside the given `type_list` instance.
+///
+template <typename... types>
+consteval auto none_of(type_list<types...>,
+                       type_predicate_for<types...> auto&& f) {
+  return (!f.template operator()<types>() && ...);
+}
+// template <type_list_instance list, type_list_type_predicate<list> functor>
+// consteval auto none_of(list types, functor&& f) {
+//   return !any_of(types, std::forward<decltype(f)>(f));
+// }
+
 /// Check whether a given type is contained
 /// inside a given 'type_list' instance.
 ///
-// template <typename type, typename... types>
-// consteval auto contains(type_list<types...>) {
-//   return (meta::equal<type, types> || ...);
-// }
 template <typename type>
-consteval auto contains(type_list_instance auto list) {
-  return exists(list, []<typename t> { return meta::equal<t, type>; });
+consteval auto contained(type_list_instance auto list) {
+  return any_of(list, []<typename t> { return as_value<t> == as_value<type>; });
 }
 
 /// Check whether a given 'type_list' slice
 /// is contained inside a 'type_list' instance.
 ///
 template <typename type>
-consteval auto contains(type_list_instance auto list, type_list<type>) {
-  return contains<type>(list);
+consteval auto contained(type_list_instance auto list, type_list<type>) {
+  return contained<type>(list);
 }
 
+/// Check whether a given `type_list` instance may represent
+/// a mathematical set that contains each element only once.
 ///
-///
-consteval bool is_set(type_list<>) {
+consteval bool elementwise_unique(type_list<>) {
   return true;
 }
 //
 template <typename type, typename... types>
-consteval bool is_set(type_list<type, types...>) {
+consteval bool elementwise_unique(type_list<type, types...>) {
   constexpr auto tail = type_list<types...>{};
-  return !contains<type>(tail) && is_set(tail);
+  return !contained<type>(tail) && elementwise_unique(tail);
 }
 
 ///
 /// Modifiers
 ///
+
+/// Concatenate all types of two given 'type_list' instances
+/// and wrap them again as a `type_list` instance.
+///
+template <typename... x, typename... y>
+consteval auto concat(type_list<x...>, type_list<y...>) {
+  return type_list<x..., y...>{};
+}
+//
+consteval auto operator+(type_list_instance auto x, type_list_instance auto y) {
+  return concat(x, y);
+}
 
 /// Returns a new instance of 'type_list' by adding
 /// the given type to the front of the given 'type_list' instance.
@@ -277,18 +286,6 @@ consteval auto push_front(type_list<types...>) {
 template <typename type, typename... types>
 consteval auto push_back(type_list<types...>) {
   return type_list<types..., type>{};
-}
-
-/// Returns a new instance of 'type_list' by
-/// concatenating the two given 'type_list' instances.
-///
-template <typename... x, typename... y>
-consteval auto concat(type_list<x...>, type_list<y...>) {
-  return type_list<x..., y...>{};
-}
-//
-consteval auto operator+(type_list_instance auto x, type_list_instance auto y) {
-  return concat(x, y);
 }
 
 /// Remove the first element of a 'type_list' instance.
@@ -314,7 +311,6 @@ consteval auto pop_back(type_list<type>) {
 }
 //
 consteval auto pop_back(type_list_instance auto list) {
-  // return push_front<decltype(front(list))>(pop_back(pop_front(list)));
   return *list + pop_back(--list);
 }
 //
@@ -329,74 +325,11 @@ consteval auto reverse(type_list<> list) {
 }
 //
 consteval auto reverse(type_list_instance auto list) {
-  // return push_back<decltype(front(list))>(reverse(pop_front(list)));
   return reverse(--list) + *list;
 }
 //
 consteval auto operator~(type_list_instance auto list) {
   return reverse(list);
-}
-
-/// Insert a type at a given index into a 'type_list' instance;
-///
-template <size_t index, typename type>
-consteval auto insert(type_list_instance auto list)
-  requires(index <= size(list))
-{
-  if constexpr (index == 0)
-    return push_front<type>(list);
-  else
-    // return push_front<decltype(front(list))>(
-    //     insert<index - 1, type>(pop_front(list)));
-    return *list + insert<index - 1, type>(--list);
-}
-
-/// Insert a type into a 'type_list' instance by using predicate.
-///
-template <typename type>
-consteval auto insert(type_list<>, auto less) {
-  return type_list<type>{};
-}
-//
-template <typename type>
-consteval auto insert(type_list_instance auto list, auto less) {
-  if constexpr (less.template operator()<type, decltype(front(list))>())
-    return push_front<type>(list);
-  else
-    // return push_front<decltype(front(list))>(
-    //     insert<type>(pop_front(list), less));
-    return *list + insert<type>(--list, less);
-}
-
-/// Remove a type at a given index from a 'type_list' instance.
-///
-template <size_t index>
-consteval auto remove(type_list_instance auto list)
-  requires(index < size(list))
-{
-  if constexpr (index == 0)
-    // return pop_front(list);
-    return --list;
-  else
-    // return push_front<decltype(front(list))>(
-    //     remove<index - 1>(pop_front(list)));
-    return *list + remove<index - 1>(--list);
-}
-
-/// Remove all types from a 'type_list' instance
-/// for which the given predicate returns 'true'.
-///
-consteval auto remove(type_list<> list, auto f) {
-  return list;
-}
-//
-consteval auto remove(type_list_instance auto list, auto f) {
-  if constexpr (f.template operator()<decltype(front(list))>())
-    // return remove(pop_front(list), f);
-    return remove(--list, f);
-  else
-    // return push_front<decltype(front(list))>(remove(pop_front(list), f));
-    return *list + remove(--list, f);
 }
 
 /// Remove a given amount of types from the front of a 'type_list' instance.
@@ -439,6 +372,77 @@ consteval auto range(type_list_instance auto list)
   return trim_front<first>(trim_back<n - last>(list));
 }
 
+/// Insert a type at a given index into a 'type_list' instance;
+///
+template <size_t index, typename type>
+consteval auto insert(type_list_instance auto list)
+  requires(index <= size(list))
+{
+  if constexpr (index == 0)
+    return push_front<type>(list);
+  else
+    // return push_front<decltype(front(list))>(
+    //     insert<index - 1, type>(pop_front(list)));
+    return *list + insert<index - 1, type>(--list);
+}
+
+/// Insert a type into a 'type_list' instance by using predicate.
+///
+template <typename type>
+consteval auto insert(type_list<>, auto less) {
+  return type_list<type>{};
+}
+//
+template <typename type>
+consteval auto insert(type_list_instance auto list, auto less) {
+  if constexpr (less.template operator()<type, as_type<front(list)>>())
+    return push_front<type>(list);
+  else
+    return *list + insert<type>(--list, less);
+}
+
+/// Return the index of a type inside a `type_list` instance.
+/// To successfully compile, the list needs to represent a set
+/// and must contain the given type.
+/// In such a way, the given list will not be empty and
+/// it will always be possible to find the specified element.
+///
+template <typename type>
+consteval auto index(type_list_instance auto list) -> size_t
+  requires(elementwise_unique(list)) && (contained<type>(list))
+{
+  if constexpr (meta::equal<type, as_type<front(list)>>)
+    return 0;
+  else
+    return 1 + index<type>(--list);
+}
+
+/// Remove a type at a given index from a 'type_list' instance.
+///
+template <size_t index>
+consteval auto remove(type_list_instance auto list)
+  requires(index < size(list))
+{
+  if constexpr (index == 0)
+    return --list;
+  else
+    return *list + remove<index - 1>(--list);
+}
+
+/// Remove all types from a 'type_list' instance
+/// for which the given predicate returns 'true'.
+///
+consteval auto remove_all(type_list<> list, auto f) {
+  return list;
+}
+//
+consteval auto remove_all(type_list_instance auto list, auto f) {
+  if constexpr (f.template operator()<as_type<*list>>())
+    return remove_all(--list, f);
+  else
+    return *list + remove_all(--list, f);
+}
+
 /// Swap two types given by their position inside a 'type_list' instance.
 ///
 template <size_t i, size_t j>
@@ -453,8 +457,11 @@ consteval auto swap(type_list_instance auto list)
   requires((i < j) && (j < size(list)))
 {
   constexpr auto n = size(list);
-  return range<0, i>(list) + slice<j>(list) + range<i + 1, j>(list) +
-         slice<i>(list) + range<j + 1, n>(list);
+  return range<0, i>(list) +      //
+         element<j>(list) +       //
+         range<i + 1, j>(list) +  //
+         element<i>(list) +       //
+         range<j + 1, n>(list);
 }
 //
 template <size_t i, size_t j>
@@ -477,13 +484,10 @@ consteval auto merge(type_list_instance auto left,
 consteval auto merge(type_list_instance auto left,
                      type_list_instance auto right,
                      auto less) {
-  if constexpr (less.template  //
-                operator()<decltype(front(left)), decltype(front(right))>())
-    return push_front<decltype(front(left))>(
-        merge(pop_front(left), right, less));
+  if constexpr (less.template operator()<as_type<*left>, as_type<*right>>())
+    return *left + merge(--left, right, less);
   else
-    return push_front<decltype(front(right))>(
-        merge(left, pop_front(right), less));
+    return *right + merge(left, --right, less);
 }
 
 /// Sort a 'type_list' instance by using a 'less' predicate.
@@ -501,104 +505,108 @@ consteval auto sort(type_list_instance auto list, auto less)
   return list;
 }
 
+/// Check whether a given functor can be used
+/// as a type transformer that returns a `type_list` instance
+/// that wraps other types for each contained element
+/// inside a given `type_list` instance.
+///
+namespace detail {
 template <typename functor, typename type>
-concept transform_type_to_wrapper = requires(functor f) {
-  { f.template operator()<type>() } -> type_wrapper_instance;
-};
-template <typename functor, typename... types>
-concept type_to_wrapper_transformer =
-    (transform_type_to_wrapper<functor, types> && ...);
-
-template <typename functor, typename type>
-concept transform_slice = requires(functor f) {
+concept type_transformer_for = requires(functor f) {
   { f.template operator()<type>() } -> type_list_instance;
 };
+}  // namespace detail
 template <typename functor, typename... types>
-concept slice_transformer = (transform_slice<functor, types> && ...);
+concept type_transformer_for =
+    (detail::type_transformer_for<functor, types> && ...);
 
-// template <typename functor, typename... types>
-// concept generic_types_transformer =
-//     (generic_type_transform<functor, types> && ...);
-
-// template <typename functor, typename list>
-// concept generic_type_transformer =
-//     type_list_instance<list> && for_all(list{}, []<typename type> {
-//       return generic_type_transform<functor, type>;
-//     });
-
-// template <typename functor, size_t index, typename type>
-// concept generic_pair_transform =
-//     requires(functor f) { f.template operator()<index, type>(); };
-
-// template <typename functor, typename list>
-// concept generic_pair_transformer =
-//     type_list_instance<list> && for_all(list{}, []<typename type> {
-//       return generic_type_transform<functor, index, type>;
-//     });
-
-///
+/// Apply a given type transformer functor to each element of a given `type_list`
+/// instance and return a `type_list` instance that contains the modified types.
+/// Modified types that are returned from the functor return types
+/// by wrapping them in a `type_list` instance.
+/// This also allows to return no types or more than one type
+/// for each contained type, leading to the capability to add and remove elements.
 ///
 template <typename... types>
 consteval auto transform(type_list<types...>,
-                         slice_transformer<types...> auto f) {
-  // f needs to return slices
+                         type_transformer_for<types...> auto f) {
   return (f.template operator()<types>() + ...);
 }
 
-// template <typename... types>
-// consteval auto transform(type_list<types...>,
-//                          type_to_wrapper_transformer<types...> auto f) {
-//   return type_list<unwrap<f.template operator()<types>()>...> {};
-// }
+///
+/// Algorithms for Code Generation
+///
 
+/// Check whether a given functor can be used as a type folder
+/// for all contained elements at once inside a given `type_list` instance.
 ///
-///
-// template <typename... types>
-// constexpr auto transform_and_fold(type_list<types...>,
-//                                   auto&& transform,
-//                                   auto&& fold) {
-//   using result_type =
-//       decltype(std::invoke(std::forward<decltype(fold)>(fold),
-//                            transform.template operator()<types>()...));
-//   if constexpr (meta::equal<void, result_type>)
-//     std::invoke(std::forward<decltype(fold)>(fold),
-//                 transform.template operator()<types>()...);
-//   else
-//     return std::invoke(std::forward<decltype(fold)>(fold),
-//                        transform.template operator()<types>()...);
-// }
+template <typename functor, typename... types>
+concept type_folder_for = requires(functor f) {
+  { f.template operator()<types...>() } -> not_void;
+};
 
+/// Apply a type folder to all contained elements
+/// inside a given `type_list` instance at once.
 ///
-///
-template <template <typename...> typename x, typename... types>
-consteval auto transform(type_list<types...>) {
-  return meta::value<x<types...>>;
-}
-
 template <typename... types>
-consteval auto pack_call(type_list<types...>, auto f) {
+constexpr auto fold(type_list<types...>, type_folder_for<types...> auto&& f) {
   return f.template operator()<types...>();
 }
 
+/// Check whether a given functor can be invoked for each given type.
 ///
-/// Algorithms
-///
+namespace detail {
+template <typename functor, typename type>
+concept type_functor_for =
+    requires(functor f) { f.template operator()<type>(); };
+}  // namespace detail
+template <typename functor, typename... types>
+concept type_functor_for = (detail::type_functor_for<functor, types> && ...);
 
-///
+/// Invoke a given type functor for each type
+/// contained in the `type_list` instance.
 ///
 template <typename... types>
-constexpr auto for_each(type_list<types...>, auto f) {
+constexpr void for_each(type_list<types...>,
+                        type_functor_for<types...> auto&& f) {
   (f.template operator()<types>(), ...);
 }
 
+/// Check whether a given functor can be invoked for each given type
+/// of a variadic template parameter list or inside a given `type_list` instance.
 ///
+namespace detail {
+template <typename functor, typename type>
+concept bool_type_functor_for = requires(functor f) {
+  { f.template operator()<type>() } -> std::same_as<bool>;
+};
+//
+template <typename functor, typename... types>
+consteval bool bool_type_functor_for_type_list(type_list<types...>) {
+  return (bool_type_functor_for<functor, types> && ...);
+}
+}  // namespace detail
+//
+template <typename functor, typename... types>
+concept bool_type_functor_for =
+    (detail::bool_type_functor_for<functor, types> && ...);
+//
+template <typename functor, typename list>
+concept bool_type_functor_for_type_list =
+    type_list_instance<list> &&  //
+    detail::bool_type_functor_for_type_list<functor>(list{});
+
+/// Apply a functor subsequently to each element of a
+/// given `type_list` instance until it returns `true`.
 ///
-constexpr auto for_each_until(type_list_instance auto list, auto f) {
+template <type_list_instance types,
+          bool_type_functor_for_type_list<types> functor>
+constexpr bool for_each_until(types list, functor&& f) {
   if constexpr (empty(list))
     return false;
   else {
-    if (f.template operator()<decltype(front(list))>()) return true;
-    return for_each_until(--list, std::forward<decltype(f)>(f));
+    if (f.template operator()<as_type<*list>>()) return true;
+    return for_each_until(--list, std::forward<functor>(f));
   }
 }
 

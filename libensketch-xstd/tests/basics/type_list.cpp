@@ -16,6 +16,9 @@ using ensketch::xstd::meta::type_list_instance;
 //
 using ensketch::xstd::meta::equal;
 
+using ensketch::xstd::meta::as_type;
+using ensketch::xstd::meta::as_value;
+
 // Provide a total order predicate for types.
 // This is only an example based on the type's size.
 // Of course, also alignment and other infos could be used.
@@ -59,79 +62,61 @@ static_assert(!empty(type_list<int, char, double>{}));
 // holds for all contained types in a 'type_list' instance.
 //
 constexpr auto correct_alignment = []<typename x> { return alignof(x) >= 4; };
-static_assert(for_all(type_list<>{}, correct_alignment));
-static_assert(for_all(type_list<float>{}, correct_alignment));
-static_assert(!for_all(type_list<char>{}, correct_alignment));
-static_assert(for_all(type_list<float, double>{}, correct_alignment));
-static_assert(!for_all(type_list<float, char>{}, correct_alignment));
-static_assert(!for_all(type_list<short, char>{}, correct_alignment));
+static_assert(all_of(type_list<>{}, correct_alignment));
+static_assert(all_of(type_list<float>{}, correct_alignment));
+static_assert(!all_of(type_list<char>{}, correct_alignment));
+static_assert(all_of(type_list<float, double>{}, correct_alignment));
+static_assert(!all_of(type_list<float, char>{}, correct_alignment));
+static_assert(!all_of(type_list<short, char>{}, correct_alignment));
 
 // Check whether a 'type_list' instance contains a type
 // that fulfills a specific condition, given by a predicate.
 //
-static_assert(!exists(type_list<>{}, correct_alignment));
-static_assert(!exists(type_list<char>{}, correct_alignment));
-static_assert(exists(type_list<float>{}, correct_alignment));
-static_assert(exists(type_list<double>{}, correct_alignment));
-static_assert(!exists(type_list<char, short>{}, correct_alignment));
-static_assert(exists(type_list<char, float>{}, correct_alignment));
-static_assert(exists(type_list<float, double>{}, correct_alignment));
+static_assert(!any_of(type_list<>{}, correct_alignment));
+static_assert(!any_of(type_list<char>{}, correct_alignment));
+static_assert(any_of(type_list<float>{}, correct_alignment));
+static_assert(any_of(type_list<double>{}, correct_alignment));
+static_assert(!any_of(type_list<char, short>{}, correct_alignment));
+static_assert(any_of(type_list<char, float>{}, correct_alignment));
+static_assert(any_of(type_list<float, double>{}, correct_alignment));
 
 // Check if a 'type_list' instance contains a specific type.
 //
-static_assert(!contains<int>(type_list<>{}));
-static_assert(!contains<char>(type_list<>{}));
-static_assert(contains<int>(type_list<int>{}));
-static_assert(!contains<int>(type_list<char>{}));
-static_assert(contains<int>(type_list<int, char>{}));
-static_assert(contains<char>(type_list<int, char>{}));
-static_assert(!contains<float>(type_list<int, char>{}));
+static_assert(!contained<int>(type_list<>{}));
+static_assert(!contained<char>(type_list<>{}));
+static_assert(contained<int>(type_list<int>{}));
+static_assert(!contained<int>(type_list<char>{}));
+static_assert(contained<int>(type_list<int, char>{}));
+static_assert(contained<char>(type_list<int, char>{}));
+static_assert(!contained<float>(type_list<int, char>{}));
 //
-static_assert(!contains(type_list<>{}, type_list<int>{}));
-static_assert(!contains(type_list<>{}, type_list<char>{}));
-static_assert(contains(type_list<int>{}, type_list<int>{}));
-static_assert(!contains(type_list<char>{}, type_list<int>{}));
-static_assert(contains(type_list<int, char>{}, type_list<int>{}));
-static_assert(contains(type_list<int, char>{}, type_list<char>{}));
-static_assert(!contains(type_list<int, char>{}, type_list<float>{}));
+static_assert(!contained(type_list<>{}, type_list<int>{}));
+static_assert(!contained(type_list<>{}, type_list<char>{}));
+static_assert(contained(type_list<int>{}, type_list<int>{}));
+static_assert(!contained(type_list<char>{}, type_list<int>{}));
+static_assert(contained(type_list<int, char>{}, type_list<int>{}));
+static_assert(contained(type_list<int, char>{}, type_list<char>{}));
+static_assert(!contained(type_list<int, char>{}, type_list<float>{}));
 
 // Access types of a 'type_list' instance by their index.
 //
-static_assert(equal<decltype(element<0>(type_list<int>{})), int>);
-static_assert(equal<decltype(element<0>(type_list<int, char>{})), int>);
-static_assert(equal<decltype(element<1>(type_list<int, char>{})), char>);
-static_assert(equal<decltype(element<0>(type_list<double, int, char>{})),  //
-                    double>);
-static_assert(equal<decltype(element<1>(type_list<double, int, char>{})), int>);
-static_assert(equal<decltype(element<2>(type_list<double, int, char>{})),  //
-                    char>);
+static_assert(element<0>(as_value<int>) == as_value<int>);
+static_assert(element<0>(as_value<int, char>) == as_value<int>);
+static_assert(element<1>(as_value<int, char>) == as_value<char>);
+static_assert(element<0>(as_value<double, int, char>) == as_value<double>);
+static_assert(element<1>(as_value<double, int, char>) == as_value<int>);
+static_assert(element<2>(as_value<double, int, char>) == as_value<char>);
 
 //
 //
 static_assert(index<int>(type_list<int>{}) == 0);
 static_assert(index<int>(type_list<float, int>{}) == 1);
 
-// Access the types wrapped by a 'type_list' given their index.
-//
-static_assert(slice<0>(type_list<int>{}) == type_list<int>{});
-static_assert(slice<0>(type_list<int, char>{}) == type_list<int>{});
-static_assert(slice<1>(type_list<int, char>{}) == type_list<char>{});
-static_assert(slice<0>(type_list<double, int, char>{}) == type_list<double>{});
-static_assert(slice<1>(type_list<double, int, char>{}) == type_list<int>{});
-static_assert(slice<2>(type_list<double, int, char>{}) == type_list<char>{});
-
-// Access the first element of a 'type_list' instance.
-//
-static_assert(equal<decltype(front(type_list<int>{})), int>);
-static_assert(equal<decltype(front(type_list<char, int>{})), char>);
-static_assert(equal<decltype(front(type_list<double, char, int>{})), double>);
-
 // Get the wrapped first element of a 'type_list' instance.
 //
-static_assert(front_slice(type_list<int>{}) == type_list<int>{});
-static_assert(front_slice(type_list<char, int>{}) == type_list<char>{});
-static_assert(front_slice(type_list<double, char, int>{}) ==
-              type_list<double>{});
+static_assert(front(type_list<int>{}) == type_list<int>{});
+static_assert(front(type_list<char, int>{}) == type_list<char>{});
+static_assert(front(type_list<double, char, int>{}) == type_list<double>{});
 //
 // You can also use the '*' operator for this.
 //
@@ -139,23 +124,11 @@ static_assert(*type_list<int>{} == type_list<int>{});
 static_assert(*type_list<char, int>{} == type_list<char>{});
 static_assert(*type_list<double, char, int>{} == type_list<double>{});
 
-// Access the last element of a 'type_list' instance.
-//
-static_assert(equal<decltype(back(type_list<int>{})), int>);
-static_assert(equal<decltype(back(type_list<char, int>{})), int>);
-static_assert(equal<decltype(back(type_list<double, char, int>{})), int>);
-
 // Get the wrapped last element of a 'type_list' instance.
 //
-static_assert(back_slice(type_list<int>{}) == type_list<int>{});
-static_assert(back_slice(type_list<char, int>{}) == type_list<int>{});
-static_assert(back_slice(type_list<double, char, int>{}) == type_list<int>{});
-//
-// You can also use the '!' operator for this.
-//
-static_assert(!type_list<int>{} == type_list<int>{});
-static_assert(!type_list<char, int>{} == type_list<int>{});
-static_assert(!type_list<double, char, int>{} == type_list<int>{});
+static_assert(back(type_list<int>{}) == type_list<int>{});
+static_assert(back(type_list<char, int>{}) == type_list<int>{});
+static_assert(back(type_list<double, char, int>{}) == type_list<int>{});
 
 // Add a type to the front of a 'type_list' instance.
 //
@@ -285,15 +258,15 @@ static_assert(remove<2>(type_list<float, int, char>{}) ==
 // Remove types in a 'type_list' instance by using a predicate.
 //
 constexpr auto too_big = []<typename x> { return sizeof(x) > 2; };
-static_assert(remove(type_list<>{}, too_big) == type_list<>{});
-static_assert(remove(type_list<char>{}, too_big) == type_list<char>{});
-static_assert(remove(type_list<int>{}, too_big) == type_list<>{});
-static_assert(remove(type_list<char, int>{}, too_big) == type_list<char>{});
-static_assert(remove(type_list<int, char>{}, too_big) == type_list<char>{});
-static_assert(remove(type_list<int, unsigned>{}, too_big) == type_list<>{});
-static_assert(remove(type_list<short, char>{}, too_big) ==
+static_assert(remove_all(type_list<>{}, too_big) == type_list<>{});
+static_assert(remove_all(type_list<char>{}, too_big) == type_list<char>{});
+static_assert(remove_all(type_list<int>{}, too_big) == type_list<>{});
+static_assert(remove_all(type_list<char, int>{}, too_big) == type_list<char>{});
+static_assert(remove_all(type_list<int, char>{}, too_big) == type_list<char>{});
+static_assert(remove_all(type_list<int, unsigned>{}, too_big) == type_list<>{});
+static_assert(remove_all(type_list<short, char>{}, too_big) ==
               type_list<short, char>{});
-static_assert(remove(type_list<int, unsigned, char, short>{}, too_big) ==
+static_assert(remove_all(type_list<int, unsigned, char, short>{}, too_big) ==
               type_list<char, short>{});
 //
 // static_assert(remove(type_list<char, short, int, unsigned, float>{},

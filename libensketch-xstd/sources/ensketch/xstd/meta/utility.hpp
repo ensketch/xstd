@@ -29,6 +29,16 @@ using reduction = std::decay_t<type>;
 template <typename x, typename y>
 constexpr bool equal = std::same_as<x, y>;
 
+/// Check whether a given type is not the same as another.
+///
+template <typename type, typename x>
+concept different_to = !std::same_as<type, x>;
+
+/// Check whether a given type is not `void`.
+///
+template <typename type>
+concept not_void = different_to<type, void>;
+
 /// This function checks whether two provided values are
 /// strictly equal, meaning their type and values coincide.
 ///
