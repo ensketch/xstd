@@ -108,6 +108,25 @@ consteval bool operator!=(generic_tag auto x, generic_tag auto y) noexcept {
   return !(x == y);
 }
 
+// Implementation Note:
+//
+// The following functions should be implemented as meta functions
+// because function templates would require additional trailing parentheses.
+// Instances of `type_tag` and `value_tag` are the only types for which
+// elements can be emplaced and unwrapped by `as_value` and `as_type`.
+// Using this for other tag types that might wrap types would get too complicated.
+// Also, a tag type might provide access to `type` and `value` at the same time.
+
+// Implementation Note:
+//
+// We could use `value_from`, `type_from`, and `signature_from`
+// instead of the names `as_value`, `as_type`, and `as_signature`.
+// However, the `_from` suffix is used for constructor extensions
+// and sounds like an involved transformation.
+// On the other hand, the `as_` prefix actually sounds like a
+// re-interpretation of the given argument and expresses more clearly
+// the actual intent of the following meta functions.
+
 namespace detail {
 
 template <typename type>
