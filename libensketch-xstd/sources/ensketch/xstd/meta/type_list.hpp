@@ -1,5 +1,5 @@
 #pragma once
-#include <ensketch/xstd/meta/utility.hpp>
+#include <ensketch/xstd/meta/tag.hpp>
 
 namespace ensketch::xstd::meta {
 
@@ -35,73 +35,27 @@ template <typename type>
 concept type_list_instance = detail::is_type_list<type>::value;
 
 ///
-/// Representing Types by Values
-///
-
-/// Receive any amount of given types as a single value
-/// by wrapping with 'type_list' and using default construction.
-///
-template <typename... types>
-inline constexpr auto as_value = type_list<types...>{};
-
-/// `type_wrapper` is a constrained alias of `type_list`
-/// that only allows for a single contained type.
-/// Types cannot be returned by standard functions directly.
-/// Instead, `type_wrapper` can be used to wrap a type
-/// and generate a value by default construction.
-/// Using this approach based on tag types,
-/// allows to use types as simple values (also for comparison).
-///
-template <typename type>
-using type_wrapper = type_list<type>;
-
-namespace detail {
-
-template <typename type>
-struct is_type_wrapper : std::false_type {};
-
-template <typename type>
-struct is_type_wrapper<type_wrapper<type>> : std::true_type {};
-
-}  // namespace detail
-
-/// Checks whether given type is an instance of `type_wrapper`.
-///
-template <typename type>
-concept type_wrapper_instance = detail::is_type_wrapper<type>::value;
-
-namespace detail {
-template <typename type>
-consteval auto unwrap(type_list<type>) -> type;
-}  // namespace detail
-
-/// Receive the wrapped type of a given `type_wrapper` instance object.
-///
-template <type_wrapper_instance auto x>
-using as_type = decltype(detail::unwrap(x));
-
-///
 /// Equality and Inequality
 ///
 
-/// Check whether two instances of 'type_list' are the same.
-///
-consteval auto operator==(type_list_instance auto x,
-                          type_list_instance auto y) {
-  return false;
-}
-//
-template <type_list_instance list>
-consteval auto operator==(list, list) {
-  return true;
-}
+// /// Check whether two instances of 'type_list' are the same.
+// ///
+// template <typename... x, typename... y>
+// consteval auto operator==(type_list<x...>, type_list<y...>) {
+//   return false;
+// }
+// //
+// template <typename... x>
+// consteval auto operator==(type_list<x...>, type_list<x...>) {
+//   return true;
+// }
 
-/// Check whether two instances of 'type_list' are not the same.
-///
-consteval auto operator!=(type_list_instance auto x,
-                          type_list_instance auto y) {
-  return !(x == y);
-}
+// /// Check whether two instances of 'type_list' are not the same.
+// ///
+// template <typename... x, typename... y>
+// consteval auto operator!=(type_list<x...> a, type_list<y...> b) {
+//   return !(a == b);
+// }
 
 ///
 /// Accessors and Predicates
@@ -140,7 +94,7 @@ template <size_t index, typename type, typename... types>
 consteval auto element(type_list<type, types...> list)
   requires((0 < index) && (index < size(list)))
 {
-  return element<index - 1>(as_value<types...>);
+  return element<index - 1>(type_list<types...>{});
 }
 
 /// Access the first element of a 'type_list' instance.
@@ -155,7 +109,7 @@ consteval auto front(type_list_instance auto list)
 }
 //
 consteval auto operator*(type_list_instance auto list) {
-  return front(list);
+  return type_list<as_type<front(list)>>{};
 }
 
 /// Access the last element of a 'type_list' instance.
@@ -440,7 +394,7 @@ consteval auto remove_all(type_list<> list, auto f) {
 }
 //
 consteval auto remove_all(type_list_instance auto list, auto f) {
-  if constexpr (f.template operator()<as_type<*list>>())
+  if constexpr (f.template operator()<as_type<front(list)>>())
     return remove_all(--list, f);
   else
     return *list + remove_all(--list, f);
@@ -461,9 +415,9 @@ consteval auto swap(type_list_instance auto list)
 {
   constexpr auto n = size(list);
   return range<0, i>(list) +      //
-         element<j>(list) +       //
+         range<j, j + 1>(list) +  //
          range<i + 1, j>(list) +  //
-         element<i>(list) +       //
+         range<i, i + 1>(list) +  //
          range<j + 1, n>(list);
 }
 //
@@ -487,7 +441,8 @@ consteval auto merge(type_list_instance auto left,
 consteval auto merge(type_list_instance auto left,
                      type_list_instance auto right,
                      auto less) {
-  if constexpr (less.template operator()<as_type<*left>, as_type<*right>>())
+  if constexpr (less.template
+                operator()<as_type<front(left)>, as_type<front(right)>>())
     return *left + merge(--left, right, less);
   else
     return *right + merge(left, --right, less);
@@ -608,7 +563,7 @@ constexpr bool for_each_until(types list, functor&& f) {
   if constexpr (empty(list))
     return false;
   else {
-    if (f.template operator()<as_type<*list>>()) return true;
+    if (f.template operator()<as_type<front(list)>>()) return true;
     return for_each_until(--list, std::forward<functor>(f));
   }
 }

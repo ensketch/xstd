@@ -58,27 +58,27 @@ consteval auto radix_tree_from(string_list<str...>) {
 }
 
 ///
-/// Ordering
+/// Equality and Inequality
 ///
 
-/// Check whether two instances of 'radix_tree' are the same.
-///
-consteval auto operator==(radix_tree_instance auto x,
-                          radix_tree_instance auto y) {
-  return false;
-}
-//
-template <radix_tree_instance tree>
-consteval auto operator==(tree, tree) {
-  return true;
-}
+// /// Check whether two instances of 'radix_tree' are the same.
+// ///
+// consteval auto operator==(radix_tree_instance auto x,
+//                           radix_tree_instance auto y) {
+//   return false;
+// }
+// //
+// template <radix_tree_instance tree>
+// consteval auto operator==(tree, tree) {
+//   return true;
+// }
 
-/// Check whether two instances of 'radix_tree' are not the same.
-///
-consteval auto operator!=(radix_tree_instance auto x,
-                          radix_tree_instance auto y) {
-  return !(x == y);
-}
+// /// Check whether two instances of 'radix_tree' are not the same.
+// ///
+// consteval auto operator!=(radix_tree_instance auto x,
+//                           radix_tree_instance auto y) {
+//   return !(x == y);
+// }
 
 ///
 /// Accessors

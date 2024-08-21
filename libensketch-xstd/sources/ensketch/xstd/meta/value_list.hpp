@@ -1,5 +1,5 @@
 #pragma once
-#include <ensketch/xstd/meta/utility.hpp>
+#include <ensketch/xstd/meta/tag.hpp>
 
 namespace ensketch::xstd::meta {
 
@@ -37,24 +37,24 @@ concept value_list_instance = detail::is_value_list<type>::value;
 /// Equality and Inequality
 ///
 
-/// Check whether two instances of 'value_list' are the same.
-///
-consteval auto operator==(value_list_instance auto x,
-                          value_list_instance auto y) {
-  return false;
-}
-//
-template <value_list_instance list>
-consteval auto operator==(list, list) {
-  return true;
-}
+// /// Check whether two instances of 'value_list' are the same.
+// ///
+// consteval auto operator==(value_list_instance auto x,
+//                           value_list_instance auto y) {
+//   return false;
+// }
+// //
+// template <value_list_instance list>
+// consteval auto operator==(list, list) {
+//   return true;
+// }
 
-/// Check whether two instances of 'value_list' are not equal.
-///
-consteval auto operator!=(value_list_instance auto x,
-                          value_list_instance auto y) {
-  return !(x == y);
-}
+// /// Check whether two instances of 'value_list' are not equal.
+// ///
+// consteval auto operator!=(value_list_instance auto x,
+//                           value_list_instance auto y) {
+//   return !(x == y);
+// }
 
 ///
 /// Accessors and Predicates

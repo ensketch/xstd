@@ -100,12 +100,12 @@ static_assert(!contained(type_list<int, char>{}, type_list<float>{}));
 
 // Access types of a 'type_list' instance by their index.
 //
-static_assert(element<0>(as_value<int>) == as_value<int>);
-static_assert(element<0>(as_value<int, char>) == as_value<int>);
-static_assert(element<1>(as_value<int, char>) == as_value<char>);
-static_assert(element<0>(as_value<double, int, char>) == as_value<double>);
-static_assert(element<1>(as_value<double, int, char>) == as_value<int>);
-static_assert(element<2>(as_value<double, int, char>) == as_value<char>);
+static_assert(element<0>(type_list<int>{}) == as_value<int>);
+static_assert(element<0>(type_list<int, char>{}) == as_value<int>);
+static_assert(element<1>(type_list<int, char>{}) == as_value<char>);
+static_assert(element<0>(type_list<double, int, char>{}) == as_value<double>);
+static_assert(element<1>(type_list<double, int, char>{}) == as_value<int>);
+static_assert(element<2>(type_list<double, int, char>{}) == as_value<char>);
 
 //
 //
@@ -114,9 +114,9 @@ static_assert(index<int>(type_list<float, int>{}) == 1);
 
 // Get the wrapped first element of a 'type_list' instance.
 //
-static_assert(front(type_list<int>{}) == type_list<int>{});
-static_assert(front(type_list<char, int>{}) == type_list<char>{});
-static_assert(front(type_list<double, char, int>{}) == type_list<double>{});
+static_assert(front(type_list<int>{}) == as_value<int>);
+static_assert(front(type_list<char, int>{}) == as_value<char>);
+static_assert(front(type_list<double, char, int>{}) == as_value<double>);
 //
 // You can also use the '*' operator for this.
 //
@@ -126,9 +126,9 @@ static_assert(*type_list<double, char, int>{} == type_list<double>{});
 
 // Get the wrapped last element of a 'type_list' instance.
 //
-static_assert(back(type_list<int>{}) == type_list<int>{});
-static_assert(back(type_list<char, int>{}) == type_list<int>{});
-static_assert(back(type_list<double, char, int>{}) == type_list<int>{});
+static_assert(back(type_list<int>{}) == as_value<int>);
+static_assert(back(type_list<char, int>{}) == as_value<int>);
+static_assert(back(type_list<double, char, int>{}) == as_value<int>);
 
 // Add a type to the front of a 'type_list' instance.
 //
