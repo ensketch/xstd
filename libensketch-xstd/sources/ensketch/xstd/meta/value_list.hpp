@@ -180,11 +180,11 @@ consteval auto none_of(value_list<values...>,
 ///
 template <auto value>
 consteval bool contained(value_list_instance auto list) {
-  return any_of(list, []<auto x> { return meta::strict_equal(x, value); });
+  return any_of(list, []<auto x> { return strict_equal(x, value); });
 }
 //
 consteval auto contained(value_list_instance auto list, auto value) {
-  return any_of(list, [value]<auto x> { return meta::strict_equal(x, value); });
+  return any_of(list, [value]<auto x> { return strict_equal(x, value); });
 }
 
 /// Check whether a given `value_list` instance may represent
@@ -356,7 +356,7 @@ template <auto value>
 consteval auto index(value_list_instance auto list) -> size_t
   requires(elementwise_unique(list)) && (contained<value>(list))
 {
-  if constexpr (meta::strict_equal(value, front(list)))
+  if constexpr (strict_equal(value, front(list)))
     return 0;
   else
     return 1 + index<value>(--list);
