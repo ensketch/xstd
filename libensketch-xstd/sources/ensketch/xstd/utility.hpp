@@ -1,5 +1,5 @@
 #pragma once
-#include <ensketch/xstd/meta/meta.hpp>
+#include <ensketch/xstd/meta.hpp>
 
 namespace ensketch::xstd {
 
