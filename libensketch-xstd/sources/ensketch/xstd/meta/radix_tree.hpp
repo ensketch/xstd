@@ -7,7 +7,7 @@ namespace ensketch::xstd::meta {
 /// Instances of the 'radix_tree' template
 /// are tag types that represent a radix tree.
 /// Each instance provides access to the root of the tree.
-/// A static radix tree must be constructed at compile time
+/// It must be constructed at compile time
 /// and cannot change during runtime.
 /// However, by using algorithms 'visit' and 'traverse',
 /// it is possible to check at runtime whether a dynamic string
@@ -43,14 +43,16 @@ concept radix_tree_instance = detail::is_radix_tree<type>::value;
 /// Constructor Extensions
 ///
 
-///
+/// Construct a `radix_tree` instance from
+/// strings given as template arguments.
 ///
 template <string... str>
 consteval auto radix_tree_from() {
   return insert<str...>(radix_tree<>{});
 }
 
-///
+/// Construct a `radix_tree` instance from
+/// a given `string_list` instance.
 ///
 template <string... str>
 consteval auto radix_tree_from(string_list<str...>) {
@@ -84,6 +86,8 @@ consteval auto radix_tree_from(string_list<str...>) {
 /// Accessors
 ///
 
+/// Return the root node of the given `radix_tree` instance.
+///
 consteval auto root(radix_tree_instance auto tree) {
   return typename decltype(tree)::root{};
 }
@@ -92,6 +96,9 @@ consteval auto root(radix_tree_instance auto tree) {
 /// Modifiers
 ///
 
+/// Insert a variable number of strings into a given instance
+/// of `radix_tree` and return the newly constructed instance.
+///
 template <string... str>
 consteval auto insert(radix_tree_instance auto tree) {
   return radix_tree{insert<str...>(root(tree))};
@@ -101,13 +108,24 @@ consteval auto insert(radix_tree_instance auto tree) {
 /// Algorithms
 ///
 
-///
+/// The visit algorithm tries to match the whole string
+/// with a static string contained inside the radix tree.
+/// If the given string is not contained in the tree,
+/// the algorithm returns false and does not call the function object.
+/// In the other case, the algorithm returns true
+/// and calls the function object
+/// with the static string provided as template parameter.
 ///
 constexpr auto visit(radix_tree_instance auto tree, czstring str, auto&& f) {
   return visit(root(tree), str, std::forward<decltype(f)>(f));
 }
 
-///
+/// The traverse algorithm tries to match the longest prefix
+/// of the given string contained in the given radix tree.
+/// If no prefix can be matched the algorithm returns `false`
+/// and does not call the function object.
+/// If a prefix can be matched, the function object is called
+/// with the static prefix and the dynamic tail.
 ///
 constexpr auto traverse(radix_tree_instance auto tree, czstring str, auto&& f) {
   return traverse(root(tree), str, std::forward<decltype(f)>(f));
