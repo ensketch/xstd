@@ -1,7 +1,7 @@
 : 1
 name: libensketch-xstd
 version: 0.1.0-a.0.z
-# type: lib,binless
+type: lib,binless
 language: c++
 project: xstd
 summary: libensketch-xstd C++ library
@@ -15,7 +15,5 @@ description-file: README.md
 url: https://github.com/ensketch/xstd
 email: ensketch@mailbox.org
 
-depends: * build2 >= 0.16.0
-depends: * bpkg >= 0.16.0
-
-# depends: libensketch-xstd ^0.1.0
+depends: * build2 >= 0.17.0
+depends: * bpkg >= 0.17.0
