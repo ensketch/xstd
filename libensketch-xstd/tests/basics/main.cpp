@@ -165,7 +165,7 @@ static_assert(static_cast<tuple_type_wrapper<float>>(test_tuple).value() ==
 //     static_cast<tuple_type_wrapper<decltype([] {})>>(test_tuple).value()));
 
 static_assert(sizeof(test_tuple) == 8);
-static_assert(alignof(test_tuple) == 4);
+static_assert(alignof(decltype(test_tuple)) == 4);
 
 struct A {};
 struct B {

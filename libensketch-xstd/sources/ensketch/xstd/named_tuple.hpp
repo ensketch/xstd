@@ -91,11 +91,11 @@ template <meta::name_list_instance identifiers, generic_tuple T>
   requires(size(identifiers{}) == std::tuple_size<T>::value)  //
 struct named_tuple : T {
   static constexpr auto names = identifiers{};
-  using tuple_type            = T;
+  using tuple_type = T;
   static constexpr auto types = type_list_from<tuple_type>();
 
   template <meta::string name>
-  using type = decltype(element<index<name>(names)>(types));
+  using type = meta::as_type<meta::element<index<name>(names)>(types)>;
 
   static constexpr auto size() noexcept -> size_t { return tuple_type::size(); }
 
@@ -222,9 +222,10 @@ value(reducible_named_tuple_instance auto&& t) noexcept(
 template <meta::string name>
 constexpr decltype(auto) value(
     reducible_named_tuple_instance auto&& t) noexcept {
-  using type           = meta::reduction<decltype(t)>;
+  using type = meta::reduction<decltype(t)>;
   constexpr auto names = type::names;
-  return get<index<name>(names)>(std::forward<decltype(t)>(t).tuple());
+  constexpr auto i = index<name>(names);
+  return get<i>(std::forward<decltype(t)>(t).tuple());
 }
 
 template <meta::string... names>
