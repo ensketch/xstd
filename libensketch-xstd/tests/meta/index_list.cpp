@@ -28,3 +28,5 @@ static_assert(!bounded<1>(index_list<1>{}));
 static_assert(bounded<2>(index_list<1>{}));
 //
 static_assert(bounded<4>(index_list<1, 2, 3>{}));
+
+int main() {}

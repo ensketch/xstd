@@ -1,3 +1,7 @@
+#include <iomanip>
+#include <iostream>
+#include <print>
+//
 #include <ensketch/xstd/meta/radix_tree.hpp>
 
 using ensketch::xstd::meta::radix_tree;
@@ -80,3 +84,76 @@ static_assert(radix_tree_from<"help",
                                            leaf<"sion">,  //
                                            leaf<"y">>>    //
                                   >>>{});
+
+using ensketch::xstd::czstring;
+using namespace ensketch::xstd;
+using namespace ensketch::xstd::meta;
+using namespace std;
+
+template <detail::radix_tree::node_instance root, meta::string prefix>
+constexpr void print() {
+  constexpr auto str = prefix + '|' + root::prefix;
+  for_each(typename root::children{},
+           [&]<typename child> { print<child, str>(); });
+  if constexpr (root::is_leaf) cout << '"' << str << '"' << endl;
+}
+
+constexpr void print(radix_tree_instance auto t) {
+  using tree = decltype(t);
+  for_each(children(root(tree{})),
+           [&]<typename child> { print<child, tree::root::prefix>(); });
+  if constexpr (tree::root::is_leaf)
+    cout << '"' << tree::root::prefix << '"' << endl;
+}
+
+inline void print_visit(radix_tree_instance auto tree, czstring cstr) {
+  const auto visited = visit(tree, cstr, []<meta::string str> {
+    cout << '"' << str << '"' << " has been visited!" << endl;
+  });
+  if (!visited)
+    cout << '"' << cstr << '"' << " is not inside the static radix tree."
+         << endl;
+}
+
+inline void print_traverse(radix_tree_instance auto tree, czstring cstr) {
+  const auto traversed =
+      traverse(tree, cstr, [&]<meta::string str>(czstring tail) {
+        cout << '"' << cstr << '"' << " visited the prefix \"" << str
+             << "\" with the tail \"" << tail << "\"!" << endl;
+      });
+  if (!traversed)
+    cout << '"' << cstr << '"'
+         << " has no known prefix inside the static radix tree." << endl;
+}
+
+int main() {
+  using detail::radix_tree::leaf;
+  using detail::radix_tree::node;
+  using detail::radix_tree::node_list;
+
+  // meta::print_type(
+  //     static_radix_tree_from<"help", "hello", "version", "verbose", "very",
+  //                            "in", "input", "out", "output">());
+
+  constexpr auto tree =
+      radix_tree_from<"help", "version", "helo", "hel", "verbose", "help-me",
+                      "abc", "key", "check", "make", "input", "output", "man",
+                      "cheat", "in", "out", "help", "help">();
+
+  print(tree);
+
+  print_visit(tree, "check");
+  print_visit(tree, "help");
+  print_visit(tree, "mine");
+  print_visit(tree, "long");
+  print_visit(tree, "verbose");
+
+  print_traverse(tree, "check");
+  print_traverse(tree, "help");
+  print_traverse(tree, "mine");
+  print_traverse(tree, "long");
+  print_traverse(tree, "verbose");
+  print_traverse(tree, "hela");
+  print_traverse(tree, "key=uiae");
+  print_traverse(tree, "xyz");
+}

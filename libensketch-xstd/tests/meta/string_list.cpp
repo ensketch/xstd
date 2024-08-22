@@ -7,3 +7,5 @@ static_assert(string_list_instance<string_list<>>);
 static_assert(string_list_instance<string_list<"help">>);
 static_assert(string_list_instance<string_list<"hello">>);
 static_assert(string_list_instance<string_list<"version">>);
+
+int main() {}

@@ -25,3 +25,5 @@ void check() {
   for (auto c : "abc"_xs) print("c = {}", c);
   const auto v = view_from("xyz"_xs);
 }
+
+int main() {}
