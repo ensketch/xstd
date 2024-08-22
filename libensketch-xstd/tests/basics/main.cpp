@@ -28,41 +28,41 @@ using namespace ensketch::xstd::meta;
 
 using namespace std;
 
-template <typename... types>
-struct std::formatter<meta::type_list<types...>, char> {
-  template <class context>
-  constexpr auto parse(context& ctx) -> context::iterator {
-    return ctx.begin();
-  }
-  template <class context>
-  auto format(meta::type_list<types...> list,
-              context& ctx) const -> context::iterator {
-    std::string str{};
-    for_each(list, [&str]<typename type> { str += typeid(type).name(); });
-    return ranges::copy(str, ctx.out()).out;
-  }
-};
+// template <typename... types>
+// struct std::formatter<meta::type_list<types...>, char> {
+//   template <class context>
+//   constexpr auto parse(context& ctx) -> context::iterator {
+//     return ctx.begin();
+//   }
+//   template <class context>
+//   auto format(meta::type_list<types...> list,
+//               context& ctx) const -> context::iterator {
+//     std::string str{};
+//     for_each(list, [&str]<typename type> { str += typeid(type).name(); });
+//     return ranges::copy(str, ctx.out()).out;
+//   }
+// };
 
-template <auto... values>
-struct std::formatter<meta::value_list<values...>, char> {
-  template <class context>
-  constexpr auto parse(context& ctx) -> context::iterator {
-    return ctx.begin();
-  }
-  template <class context>
-  auto format(meta::value_list<values...> list,
-              context& ctx) const -> context::iterator {
-    std::string str{};
-    for_each(list, [&str]<auto value> {
-      // str += std::format("{}: {}, ", value, typeid(value).name());
-      str += value;
-      str += ": ";
-      str += typeid(value).name();
-      str += ", ";
-    });
-    return ranges::copy(str, ctx.out()).out;
-  }
-};
+// template <auto... values>
+// struct std::formatter<meta::value_list<values...>, char> {
+//   template <class context>
+//   constexpr auto parse(context& ctx) -> context::iterator {
+//     return ctx.begin();
+//   }
+//   template <class context>
+//   auto format(meta::value_list<values...> list,
+//               context& ctx) const -> context::iterator {
+//     std::string str{};
+//     for_each(list, [&str]<auto value> {
+//       // str += std::format("{}: {}, ", value, typeid(value).name());
+//       str += value;
+//       str += ": ";
+//       str += typeid(value).name();
+//       str += ", ";
+//     });
+//     return ranges::copy(str, ctx.out()).out;
+//   }
+// };
 
 template <typename... ts>
 struct tuple_detail {
@@ -204,11 +204,10 @@ static_assert(
     std::same_as<decltype(static_cast<B>(inheritance_test1{}).data), char>);
 
 int main() {
-  constexpr auto list = type_list<int, float, std::string, type_list<>>{};
-  print("{}\n", list);
-
-  constexpr auto vlist = value_list<1, 'c', 1.23f, "hello"_xs>{};
-  print("{}\n", vlist);
+  // constexpr auto list = type_list<int, float, std::string, type_list<>>{};
+  // print("{}\n", list);
+  // constexpr auto vlist = value_list<1, 'c', 1.23f, "hello"_xs>{};
+  // print("{}\n", vlist);
   // meta::print_type(list);
 
   //

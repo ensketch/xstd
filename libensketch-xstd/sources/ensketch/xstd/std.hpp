@@ -21,7 +21,13 @@
 // It provides basic STL header inclusions, concepts, type
 // definitions, and functions that are needed almost everywhere.
 
+#ifndef __has_include
+#define __has_include(x) 0
+#endif
+
+#if __has_include(<version>)
 #include <version>
+#endif
 
 // We always want to be able to use 'assert'.
 //
@@ -66,7 +72,7 @@
 #include <string>
 #include <string_view>
 //
-#if __cpp_lib_print >= 202207L
+#if __has_include(<print>)
 #include <print>
 #endif
 
