@@ -21,6 +21,8 @@
 // It provides basic STL header inclusions, concepts, type
 // definitions, and functions that are needed almost everywhere.
 
+#include <version>
+
 // We always want to be able to use 'assert'.
 //
 #include <cassert>
@@ -60,10 +62,13 @@
 #include <format>
 #include <iomanip>
 #include <iostream>
-#include <print>
 #include <sstream>
 #include <string>
 #include <string_view>
+//
+#if __cpp_lib_print >= 202207L
+#include <print>
+#endif
 
 // Standard Containers and Ranges
 //

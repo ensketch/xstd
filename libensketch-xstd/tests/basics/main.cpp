@@ -103,10 +103,9 @@ concept my_tuple_instance =
     }>;
 template <size_t index>
 constexpr auto value(my_tuple_instance auto&& t) noexcept {
-  using detail = as_type<t.detail()>;
+  using detail = as_type<std::decay_t<decltype(t)>::detail()>;
   return static_cast<detail::template wrapper<index>>(t).value();
 }
-
 constexpr auto t = my_tuple<int, float>{-1, 1.23f};
 static_assert(value<0>(t) == -1);
 static_assert(value<1>(t) == 1.23f);

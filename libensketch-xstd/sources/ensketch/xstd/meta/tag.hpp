@@ -161,15 +161,15 @@ struct as_value<value_tag<x>> {
   static constexpr auto value = x;
 };
 
-template <auto value>
-struct as_type {
-  using type = value_tag<value>;
-};
+// template <auto value>
+// struct as_type {
+//   using type = value_tag<value>;
+// };
 //
-template <generic_tag auto value>
-struct as_type<value> {
-  using type = decltype(value);
-};
+// template <generic_tag auto value>
+// struct as_type<value> {
+//   using type = decltype(value);
+// };
 //
 // The compiler will complain about ambiguity of specializations
 // if `type_tag_instance` is used directly as constraining concept.
@@ -178,21 +178,47 @@ struct as_type<value> {
 // a further template specialization for the compiler.
 // Also, matching of values with default constructors `type_tag<x>{}`
 // is not able to correctly deduce template parameters.
-template <generic_tag auto value>
-  requires type_tag_instance<decltype(value)>
-struct as_type<value> {
-  using type = typename decltype(value)::type;
-};
+// template <generic_tag auto value>
+//   requires type_tag_instance<decltype(value)>
+// struct as_type<value> {
+//   using type = typename decltype(value)::type;
+// };
+
+// Implementation Note:
+//
+// Using partial template specializations for `constexpr` values
+// does not seem to be robust and leads to compile errors for Clang.
+// Instead, use functions in an unevaluated context.
+
+template <auto value>
+auto as_type() -> typename decltype(value)::type
+  requires type_tag_instance<decltype(value)>;
+
+template <auto value>
+auto as_type() -> decltype(value)
+  requires generic_tag<decltype(value)> &&  //
+           (!type_tag_instance<decltype(value)>);
+
+template <auto value>
+auto as_type() -> value_tag<value>;
+
+// template <auto x>
+// struct as_signature {
+//   static constexpr auto value = value_tag<x>{};
+// };
+//
+// template <generic_tag auto x>
+// struct as_signature<x> {
+//   static constexpr auto value = x;
+// };
 
 template <auto x>
-struct as_signature {
-  static constexpr auto value = value_tag<x>{};
-};
-//
-template <generic_tag auto x>
-struct as_signature<x> {
-  static constexpr auto value = x;
-};
+consteval auto as_signature() {
+  if constexpr (generic_tag<decltype(x)>)
+    return x;
+  else
+    return value_tag<x>{};
+}
 
 }  // namespace detail
 
@@ -217,7 +243,8 @@ inline constexpr auto as_value = detail::as_value<type>::value;
 /// `value_tag` and return the respective type.
 ///
 template <auto value>
-using as_type = typename detail::as_type<value>::type;
+using as_type = decltype(detail::as_type<value>());
+// typename detail::as_type<value>::type;
 
 /// Interpret a given `consteval` value, such that will be
 /// part of a function's signature when used as return value.
@@ -227,6 +254,7 @@ using as_type = typename detail::as_type<value>::type;
 /// return a new value by using default construction.
 ///
 template <auto value>
-inline constexpr auto as_signature = detail::as_signature<value>::value;
+inline constexpr auto as_signature = detail::as_signature<value>();
+// detail::as_signature<value>::value;
 
 }  // namespace ensketch::xstd::meta

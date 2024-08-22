@@ -488,7 +488,7 @@ concept value_transformer_for =
 ///
 template <auto... values>
 consteval auto transform(value_list<values...>,
-                         value_transformer_for<values...> auto&& f) {
+                         value_transformer_for<values...> auto f) {
   return value_list<f.template operator()<values>()...> {};
 }
 

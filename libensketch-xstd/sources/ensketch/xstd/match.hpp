@@ -49,7 +49,7 @@ concept matches =
 template <typename type>
 concept match_instance =
     matches<type, []<typename... functors>(match<functors...>) {
-      meta::as_signature<true>;
+      return meta::as_signature<true>;
     }>;
 
 }  // namespace ensketch::xstd
