@@ -29,8 +29,7 @@ Here is a short list of essential requirements and dependencies:
 - `x86_64` | `aarch64`
 
 **Operating System:**
-- Linux
-<!-- | MacOS | Windows | FreeBSD -->
+- Linux | MacOS | Windows
 
 **C++ Compiler:**
 - GCC 14 | Clang 18
