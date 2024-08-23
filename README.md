@@ -225,7 +225,9 @@ Currently, there is no roadmap available.
 
 ## Changelog
 
-No changelog is currently available as no versions have been released yet.
+All notable changes to this project will be documented in [`CHANGELOG.md`](CHANGELOG.md).
+
+The format is based on [Keep a Changelog][keep-a-changelog] and [Common Changelog][common-changelog], and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Contributing
 
@@ -288,6 +290,9 @@ This file is offered as-is, without any warranty.
 - [GNU Licenses][GNU-licenses]
 <!-- - [GNU General Public License Version 3][GPLv3] -->
 
+- [Keep a Changelog][keep-a-changelog]
+- [Common Changelog][common-changelog]
+
 [manifest]: libensketch-xstd/manifest (libensketch-xstd build2 Package Manifest)
 [project-issues]: https://github.com/ensketch/xstd/issues (Project Issues)
 
@@ -309,3 +314,6 @@ This file is offered as-is, without any warranty.
 
 [GNU-licenses]: https://www.gnu.org/licenses/ (GNU Licenses)
 [GPLv3]: https://www.gnu.org/licenses/gplv3.html (GNU General Public License Version 3)
+
+[keep-a-changelog]: https://keepachangelog.com/ (keep a changelog)
+[common-changelog]: https://common-changelog.org/ (Common Changelog)
