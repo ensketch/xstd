@@ -2,7 +2,7 @@
 
 # xstd
 
-`xstd` is a C++ library that provides extensions for the standard template library (STL) to be used by ensketch projects.
+`xstd` is a C++ library that provides extensions for the STL to be used by ensketch projects.
 
 ![top-language-badge](https://img.shields.io/github/languages/top/ensketch/xstd.svg?style=for-the-badge)
 ![code-size-badge](https://img.shields.io/github/languages/code-size/ensketch/xstd.svg?style=for-the-badge)
