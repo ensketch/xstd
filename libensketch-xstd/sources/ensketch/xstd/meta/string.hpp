@@ -33,7 +33,7 @@ namespace ensketch::xstd::meta {
 template <size_t N>
   requires(N > 0)  // String must at least store a zero byte.
 struct string {
-  using iterator       = zstring;
+  using iterator = zstring;
   using const_iterator = czstring;
 
   constexpr string() noexcept = default;
@@ -97,6 +97,21 @@ struct string {
   // private:
   char _data[N]{};
 };
+
+namespace detail {
+
+template <typename type>
+struct is_string : std::false_type {};
+
+template <size_t n>
+struct is_string<string<n>> : std::true_type {};
+
+}  // namespace detail
+
+/// Check whether a given type is an instance of `meta::string`.
+///
+template <typename type>
+concept string_instance = detail::is_string<type>::value;
 
 // Provide support for custom literal '_xs'.
 //
