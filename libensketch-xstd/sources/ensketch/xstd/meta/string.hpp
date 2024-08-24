@@ -201,3 +201,18 @@ constexpr auto tail(string<N> str) noexcept {
 }
 
 }  // namespace ensketch::xstd::meta
+
+/// `meta::string` Formatter for `std::format` and `std::print`
+///
+template <size_t n>
+struct std::formatter<ensketch::xstd::meta::string<n>, char> {
+  template <class context>
+  constexpr auto parse(context& ctx) -> context::iterator {
+    return ctx.begin();
+  }
+  template <class context>
+  auto format(ensketch::xstd::meta::string<n> str,
+              context& ctx) const -> context::iterator {
+    return ranges::copy(view_from(str), ctx.out()).out;
+  }
+};
