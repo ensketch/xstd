@@ -200,6 +200,13 @@ constexpr auto tail(string<N> str) noexcept {
   return suffix<str.size() - index>(str);
 }
 
+/// `meta::string` Output Streamer for Printing via `cout`
+///
+template <size_t n>
+inline auto operator<<(std::ostream& os, string<n> str) -> std::ostream& {
+  return os << view_from(str);
+}
+
 }  // namespace ensketch::xstd::meta
 
 /// `meta::string` Formatter for `std::format` and `std::print`
