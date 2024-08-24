@@ -37,7 +37,7 @@ concept named_tuple_value_access = requires(tuple_type x) {
 template <typename tuple_type>
 concept generic_named_tuple =
     generic_tuple<tuple_type> &&
-    for_all(tuple_type::names, []<meta::string name> {
+    all_of(tuple_type::names, []<meta::string name> {
       return detail::named_tuple_value_access<tuple_type, name>;
     });
 

@@ -455,7 +455,7 @@ consteval auto merge(value_list_instance auto left,
 /// Sort a 'value_list' instance by using a 'less' predicate.
 ///
 consteval auto sort(value_list_instance auto list, auto less) {
-  constexpr auto n    = size(list);
+  constexpr auto n = size(list);
   constexpr auto half = n / 2;
   return merge(sort(range<0, half>(list), less),
                sort(range<half, n>(list), less), less);
