@@ -391,6 +391,20 @@ consteval auto index(type_list_instance auto list) -> size_t
     return 1 + index<type>(--list);
 }
 
+/// Return the index to the first type inside a `type_list`
+/// instance that fulfills the given predicate.
+/// To successfully compile, the list must contain at least one such type.
+///
+template <type_list_instance list>
+consteval auto index(list, type_predicate_for_type_list<list> auto f) -> size_t
+  requires(any_of(list{}, f))
+{
+  if constexpr (f.template operator()<as_type<front(list{})>>())
+    return 0;
+  else
+    return 1 + index(--list{}, f);
+}
+
 /// Remove a type at a given index from a 'type_list' instance.
 ///
 template <size_t index>
@@ -468,7 +482,7 @@ consteval auto merge(type_list_instance auto left,
 /// Sort a 'type_list' instance by using a 'less' predicate.
 ///
 consteval auto sort(type_list_instance auto list, auto less) {
-  constexpr auto n    = size(list);
+  constexpr auto n = size(list);
   constexpr auto half = n / 2;
   return merge(sort(range<0, half>(list), less),
                sort(range<half, n>(list), less), less);
