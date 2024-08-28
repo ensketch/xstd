@@ -206,7 +206,7 @@ consteval auto none_of(type_list<types...>,
 ///
 template <typename type>
 consteval auto contained(type_list_instance auto list) {
-  return any_of(list, []<typename t> { return as_value<t> == as_value<type>; });
+  return any_of(list, []<typename t> { return std::same_as<t, type>; });
 }
 
 /// Check whether a given 'type_list' slice
