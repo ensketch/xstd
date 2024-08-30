@@ -1,10 +1,10 @@
 : 1
-name: libensketch-xstd
+name: libensketch-xstd-tests
 version: 0.1.1-a.0.z
-type: lib,binless
+type: exe
 language: c++
 project: xstd
-summary: C++ utility library to extend the standard library
+summary: C++ utility library to extend the standard library, tests
 license: GPL-3.0-or-later ; GNU General Public License v3.0 or later.
 
 # topics: first topic, second topic
@@ -18,4 +18,6 @@ email: ensketch@mailbox.org
 depends: * build2 >= 0.17.0
 depends: * bpkg >= 0.17.0
 
-tests: libensketch-xstd-tests == $
+# depends: libensketch-xstd == $
+
+depends: doctest ^2.4.11

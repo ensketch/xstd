@@ -1,0 +1,7 @@
+project = libensketch-xstd-tests
+
+using version
+using config
+using test
+using install
+using dist
