@@ -20,6 +20,7 @@
 using ensketch::xstd::meta::index_list;
 using ensketch::xstd::meta::permutation;
 using ensketch::xstd::meta::permutation_for;
+using ensketch::xstd::meta::permutation_identity;
 using ensketch::xstd::meta::permutation_instance;
 
 int main() {
@@ -49,4 +50,12 @@ int main() {
   static_assert(!permutation_for<index_list<0, 1>, 3>);
   static_assert(!permutation_for<index_list<0, 1, 2, 3>, 3>);
   static_assert(!permutation_for<index_list<3, 1, 2>, 3>);
+
+  static_assert(permutation_identity<0>() == permutation<>{});
+  static_assert(permutation_identity<1>() == permutation<0>{});
+  static_assert(permutation_identity<2>() == permutation<0, 1>{});
+  static_assert(permutation_identity<3>() == permutation<0, 1, 2>{});
+  static_assert(permutation_identity<4>() == permutation<0, 1, 2, 3>{});
+  static_assert(permutation_identity<5>() == permutation<0, 1, 2, 3, 4>{});
+  static_assert(permutation_identity<6>() == permutation<0, 1, 2, 3, 4, 5>{});
 }

@@ -41,4 +41,9 @@ concept permutation_instance = detail::is_permutation<type>::value;
 template <typename type, size_t n>
 concept permutation_for = permutation_instance<type> && (size(type{}) == n);
 
+template <size_t n>
+consteval auto permutation_identity() {
+  return index_list_from_iota<n>();
+}
+
 }  // namespace ensketch::xstd::meta
