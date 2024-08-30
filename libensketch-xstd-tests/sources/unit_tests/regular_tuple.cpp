@@ -32,6 +32,12 @@ struct uint8x2 : array<uint8, 2> {};
 struct uint8x3 : array<uint8, 3> {};
 struct uint8x5 : array<uint8, 5> {};
 
+template <size_t index>
+constexpr auto dynamic_offset(auto& x) noexcept {
+  return reinterpret_cast<const std::byte*>(std::addressof(value<index>(x))) -
+         reinterpret_cast<const std::byte*>(std::addressof(x));
+};
+
 }  // namespace
 
 SCENARIO("Size and Alignment of Basic Types") {
@@ -52,225 +58,305 @@ SCENARIO("Size and Alignment of Basic Types") {
 }
 
 SCENARIO("Regular Tuple Size, Alignment, and Offset") {
-  // static_assert(sizeof(regular_tuple<>) == 1);
-  // static_assert(alignof(regular_tuple<>) == 1);
+  static_assert(sizeof(regular_tuple<>) == 1);
+  static_assert(alignof(regular_tuple<>) == 1);
 
-  // static_assert(sizeof(regular_tuple<uint8, uint32>) == 8);
-  // static_assert(alignof(regular_tuple<uint8, uint32>) == 4);
-  // //
-  // static_assert(sizeof(regular_tuple<uint8, uint8, uint32>) == 8);
-  // static_assert(alignof(regular_tuple<uint8, uint8, uint32>) == 4);
+  static_assert(sizeof(regular_tuple<uint8, uint32>) == 8);
+  static_assert(alignof(regular_tuple<uint8, uint32>) == 4);
+  //
+  static_assert(sizeof(regular_tuple<uint8, uint8, uint32>) == 8);
+  static_assert(alignof(regular_tuple<uint8, uint8, uint32>) == 4);
 
-  //   using types = type_list<               //
-  //       nothing,                           //
-  //       uint8, uint8x2, uint8x3, uint8x5,  //
-  //       uint16, uint32, uint64,            //
-  //       // float32, float64,                  //
-  //       string, /*int&,*/ czstring>;
+  constexpr auto types = meta::type_list<  //
+      nothing,                             //
+      uint8, uint8x2, uint8x3, uint8x5,    //
+      uint16, uint32, uint64,              //
+      float32,                             //
+      // float64,
+      // string,
+      czstring
+      // Reference types needs to be removed as `offsetof`
+      // is invalid within non-standard-layout type.
+      // int&
+      >{};
 
-  //   types::for_each([]<typename type> {
-  //     {
-  //       struct test {
-  //         type x;
-  //       };
-  //       using tuple_type = regular_tuple<type>;
-  //       static_assert(sizeof(tuple_type) == sizeof(test));
-  //       static_assert(alignof(tuple_type) == alignof(test));
-  //     }
+  for_each(types, [&]<typename type> {
+    {
+      struct test {
+        type x;
+      };
+      using tuple_type = regular_tuple<type>;
+      static_assert(sizeof(tuple_type) == sizeof(test));
+      static_assert(alignof(tuple_type) == alignof(test));
+    }
 
-  //     types::for_each([]<typename type2> {
-  //       struct test {
-  //         type x;
-  //         type2 y;
-  //       };
-  //       using tuple_type = regular_tuple<type, type2>;
+    for_each(types, [&]<typename type2> {
+      struct test {
+        type x;
+        type2 y;
+      };
+      using tuple_type = regular_tuple<type, type2>;
 
-  //       static_assert(sizeof(tuple_type) == sizeof(test));
-  //       static_assert(alignof(tuple_type) == alignof(test));
-  //       static_assert(offsetof(test, x) ==
-  //                     meta::tuple::byte_offset<tuple_type, 0>);
-  //       static_assert(offsetof(test, y) ==
-  //                     meta::tuple::byte_offset<tuple_type, 1>);
+      static_assert(sizeof(tuple_type) == sizeof(test));
+      static_assert(alignof(tuple_type) == alignof(test));
 
-  //       types::for_each([]<typename type3> {
-  //         struct test {
-  //           type x;
-  //           type2 y;
-  //           type3 z;
-  //         };
-  //         using tuple_type = regular_tuple<type, type2, type3>;
+      static_assert(offsetof(test, x) == tuple_type::template byte_offset<0>());
+      static_assert(offsetof(test, y) == tuple_type::template byte_offset<1>());
 
-  //         static_assert(sizeof(tuple_type) == sizeof(test));
-  //         static_assert(alignof(tuple_type) == alignof(test));
-  //         static_assert(offsetof(test, x) ==
-  //                       meta::tuple::byte_offset<tuple_type, 0>);
-  //         static_assert(offsetof(test, y) ==
-  //                       meta::tuple::byte_offset<tuple_type, 1>);
-  //         static_assert(offsetof(test, z) ==
-  //                       meta::tuple::byte_offset<tuple_type, 2>);
-  //       });
-  //     });
-  //   });
+      tuple_type x{};
+      CHECK((dynamic_offset<0>(x)) == tuple_type::template byte_offset<0>());
+      CHECK((dynamic_offset<1>(x)) == tuple_type::template byte_offset<1>());
+
+      for_each(types, [&]<typename type3> {
+        struct test {
+          type x;
+          type2 y;
+          type3 z;
+        };
+        using tuple_type = regular_tuple<type, type2, type3>;
+
+        static_assert(sizeof(tuple_type) == sizeof(test));
+        static_assert(alignof(tuple_type) == alignof(test));
+
+        static_assert(offsetof(test, x) ==
+                      tuple_type::template byte_offset<0>());
+        static_assert(offsetof(test, y) ==
+                      tuple_type::template byte_offset<1>());
+        static_assert(offsetof(test, z) ==
+                      tuple_type::template byte_offset<2>());
+
+        constexpr tuple_type x{};
+        CHECK((dynamic_offset<0>(x)) == tuple_type::template byte_offset<0>());
+        CHECK((dynamic_offset<1>(x)) == tuple_type::template byte_offset<1>());
+        CHECK((dynamic_offset<2>(x)) == tuple_type::template byte_offset<2>());
+      });
+    });
+  });
 }
 
-// SCENARIO("Regular Tuple Element Access") {
-//   { regular_tuple<> x{}; }
+SCENARIO("Regular Tuple Element Access") {
+  //   { regular_tuple<> x{}; }
 
-//   SUBCASE("Irreducible Types") {
-//     using tuple_type = regular_tuple<int>;
-//     //
-//     tuple_type x{1};
-//     static_assert(meta::equal<int&, decltype(value<0>(x))>);
-//     static_assert(meta::equal<int&&, decltype(value<0>(move(x)))>);
-//     static_assert(meta::equal<int&&, decltype(value<0>(tuple_type{1}))>);
-//     CHECK(value<0>(x) == 1);
-//     ++value<0>(x);
-//     CHECK(value<0>(x) == 2);
-//     //
-//     const tuple_type y{2};
-//     static_assert(meta::equal<const int&, decltype(value<0>(y))>);
-//     static_assert(meta::equal<const int&&, decltype(value<0>(move(y)))>);
-//     CHECK(value<0>(y) == 2);
-//   }
+  SUBCASE("Irreducible Types") {
+    {
+      using tuple_type = std::tuple<int>;
+      //
+      tuple_type x{1};
+      static_assert(std::same_as<int&, decltype(get<0>(x))>);
+      static_assert(std::same_as<int&&, decltype(get<0>(std::move(x)))>);
+      static_assert(std::same_as<int&&, decltype(get<0>(tuple_type{1}))>);
+      CHECK(get<0>(x) == 1);
+      ++get<0>(x);
+      CHECK(get<0>(x) == 2);
+      //
+      const tuple_type y{2};
+      static_assert(std::same_as<const int&, decltype(get<0>(y))>);
+      static_assert(std::same_as<const int&&, decltype(get<0>(std::move(y)))>);
+      CHECK(get<0>(y) == 2);
+    }
+    using tuple_type = regular_tuple<int>;
+    //
+    tuple_type x{1};
+    static_assert(std::same_as<int&, decltype(value<0>(x))>);
+    static_assert(std::same_as<int&&, decltype(value<0>(std::move(x)))>);
+    static_assert(std::same_as<int&&, decltype(value<0>(tuple_type{1}))>);
+    CHECK(value<0>(x) == 1);
+    ++value<0>(x);
+    CHECK(value<0>(x) == 2);
+    //
+    const tuple_type y{2};
+    static_assert(std::same_as<const int&, decltype(value<0>(y))>);
+    static_assert(std::same_as<const int&&, decltype(value<0>(std::move(y)))>);
+    CHECK(value<0>(y) == 2);
+  }
 
-//   SUBCASE("LValue References") {
-//     using tuple_type = regular_tuple<int&>;
-//     int data = 1;
-//     tuple_type x{data};
-//     static_assert(meta::equal<int&, decltype(value<0>(x))>);
-//     static_assert(meta::equal<int&, decltype(value<0>(move(x)))>);
-//     CHECK(value<0>(x) == 1);
-//     ++value<0>(x);
-//     CHECK(value<0>(x) == 2);
-//     CHECK(data == 2);
-//     //
-//     const tuple_type y{data};
-//     static_assert(meta::equal<int&, decltype(value<0>(y))>);
-//     static_assert(meta::equal<int&, decltype(value<0>(move(y)))>);
-//     CHECK(value<0>(y) == 2);
-//     ++value<0>(y);
-//     CHECK(value<0>(y) == 3);
-//     CHECK(data == 3);
-//   }
+  SUBCASE("LValue References") {
+    {
+      using tuple_type = std::tuple<int&>;
+      int data = 1;
+      tuple_type x{data};
+      static_assert(std::same_as<int&, decltype(get<0>(x))>);
+      static_assert(std::same_as<int&, decltype(get<0>(std::move(x)))>);
+      CHECK(get<0>(x) == 1);
+      ++get<0>(x);
+      CHECK(get<0>(x) == 2);
+      CHECK(data == 2);
+      //
+      const tuple_type y{data};
+      static_assert(std::same_as<int&, decltype(get<0>(y))>);
+      static_assert(std::same_as<int&, decltype(get<0>(std::move(y)))>);
+      CHECK(get<0>(y) == 2);
+      ++get<0>(y);
+      CHECK(get<0>(y) == 3);
+      CHECK(data == 3);
+    }
+    using tuple_type = regular_tuple<int&>;
+    int data = 1;
+    tuple_type x{data};
+    static_assert(std::same_as<int&, decltype(value<0>(x))>);
+    static_assert(std::same_as<int&, decltype(value<0>(std::move(x)))>);
+    CHECK(value<0>(x) == 1);
+    ++value<0>(x);
+    CHECK(value<0>(x) == 2);
+    CHECK(data == 2);
+    //
+    const tuple_type y{data};
+    static_assert(std::same_as<int&, decltype(value<0>(y))>);
+    static_assert(std::same_as<int&, decltype(value<0>(std::move(y)))>);
+    CHECK(value<0>(y) == 2);
+    ++value<0>(y);
+    CHECK(value<0>(y) == 3);
+    CHECK(data == 3);
+  }
 
-//   SUBCASE("Const LValue References") {
-//     using tuple_type = regular_tuple<const int&>;
-//     int data = 1;
-//     tuple_type x{data};
-//     static_assert(meta::equal<const int&, decltype(value<0>(x))>);
-//     static_assert(meta::equal<const int&, decltype(value<0>(move(x)))>);
-//     static_assert(
-//         meta::equal<const int&, decltype(value<0>(tuple_type{data}))>);
-//     CHECK(value<0>(x) == 1);
-//     ++data;
-//     CHECK(value<0>(x) == 2);
-//     //
-//     const tuple_type y{data};
-//     static_assert(meta::equal<const int&, decltype(value<0>(y))>);
-//     static_assert(meta::equal<const int&, decltype(value<0>(move(y)))>);
-//     CHECK(value<0>(y) == 2);
-//     ++data;
-//     CHECK(value<0>(y) == 3);
-//   }
+  SUBCASE("Const LValue References") {
+    {
+      using tuple_type = std::tuple<const int&>;
+      int data = 1;
+      tuple_type x{data};
+      static_assert(std::same_as<const int&, decltype(get<0>(x))>);
+      static_assert(std::same_as<const int&, decltype(get<0>(std::move(x)))>);
+      static_assert(
+          std::same_as<const int&, decltype(get<0>(tuple_type{data}))>);
+      CHECK(get<0>(x) == 1);
+      ++data;
+      CHECK(get<0>(x) == 2);
+      //
+      const tuple_type y{data};
+      static_assert(std::same_as<const int&, decltype(get<0>(y))>);
+      static_assert(std::same_as<const int&, decltype(get<0>(std::move(y)))>);
+      CHECK(get<0>(y) == 2);
+      ++data;
+      CHECK(get<0>(y) == 3);
+    }
+    using tuple_type = regular_tuple<const int&>;
+    int data = 1;
+    tuple_type x{data};
+    static_assert(std::same_as<const int&, decltype(value<0>(x))>);
+    static_assert(std::same_as<const int&, decltype(value<0>(std::move(x)))>);
+    static_assert(
+        std::same_as<const int&, decltype(value<0>(tuple_type{data}))>);
+    CHECK(value<0>(x) == 1);
+    ++data;
+    CHECK(value<0>(x) == 2);
+    //
+    const tuple_type y{data};
+    static_assert(std::same_as<const int&, decltype(value<0>(y))>);
+    static_assert(std::same_as<const int&, decltype(value<0>(std::move(y)))>);
+    CHECK(value<0>(y) == 2);
+    ++data;
+    CHECK(value<0>(y) == 3);
+  }
 
-//   SUBCASE("RValue References") {
-//     using tuple_type = regular_tuple<int&&>;
-//     int data = 1;
-//     tuple_type x{move(data)};
-//     static_assert(meta::equal<int&, decltype(value<0>(x))>);
-//     static_assert(meta::equal<int&&, decltype(value<0>(move(x)))>);
-//     //
-//     const tuple_type y{move(data)};
-//     static_assert(meta::equal<int&, decltype(value<0>(y))>);
-//     static_assert(meta::equal<int&&, decltype(value<0>(move(y)))>);
-//   }
-// }
+  SUBCASE("RValue References") {
+    {
+      using tuple_type = std::tuple<int&&>;
+      int data = 1;
+      tuple_type x{std::move(data)};
+      static_assert(std::same_as<int&, decltype(get<0>(x))>);
+      static_assert(std::same_as<int&&, decltype(get<0>(std::move(x)))>);
+      //
+      const tuple_type y{std::move(data)};
+      static_assert(std::same_as<int&, decltype(get<0>(y))>);
+      static_assert(std::same_as<int&&, decltype(get<0>(std::move(y)))>);
+    }
+    using tuple_type = regular_tuple<int&&>;
+    int data = 1;
+    tuple_type x{std::move(data)};
+    static_assert(std::same_as<int&, decltype(value<0>(x))>);
+    static_assert(std::same_as<int&&, decltype(value<0>(std::move(x)))>);
+    //
+    const tuple_type y{std::move(data)};
+    static_assert(std::same_as<int&, decltype(value<0>(y))>);
+    static_assert(std::same_as<int&&, decltype(value<0>(std::move(y)))>);
+  }
+}
 
-// SCENARIO("Regular Tuple Constructors and Assignments") {
-//   using tuple_type = regular_tuple<int, string, float>;
+SCENARIO("Regular Tuple Constructors and Assignments") {
+  using tuple_type = regular_tuple<int, string, float>;
 
-//   SUBCASE("Default Constructor") {
-//     tuple_type x{};
-//     CHECK(value<0>(x) == int{});
-//     CHECK(value<1>(x) == string{});
-//     CHECK(value<2>(x) == float{});
-//   }
+  SUBCASE("Default Constructor") {
+    tuple_type x{};
+    CHECK(value<0>(x) == int{});
+    CHECK(value<1>(x) == string{});
+    CHECK(value<2>(x) == float{});
+  }
 
-//   SUBCASE("Forward Constructor") {
-//     tuple_type x{-1, "Test", 3.14f};
-//     CHECK(value<0>(x) == -1);
-//     CHECK(value<1>(x) == "Test");
-//     CHECK(value<2>(x) == 3.14f);
+  SUBCASE("Forward Constructor") {
+    tuple_type x{-1, "Test", 3.14f};
+    CHECK(value<0>(x) == -1);
+    CHECK(value<1>(x) == "Test");
+    CHECK(value<2>(x) == 3.14f);
 
-//     SUBCASE("Copy Constructor") {
-//       tuple_type y = x;
-//       CHECK(value<0>(y) == -1);
-//       CHECK(value<1>(y) == "Test");
-//       CHECK(value<2>(y) == 3.14f);
+    SUBCASE("Copy Constructor") {
+      tuple_type y = x;
+      CHECK(value<0>(y) == -1);
+      CHECK(value<1>(y) == "Test");
+      CHECK(value<2>(y) == 3.14f);
 
-//       SUBCASE("Copy Assignment") {
-//         value<0>(y) = 2;
-//         value<1>(y) += " 2";
-//         value<2>(y) = 1.23f;
+      SUBCASE("Copy Assignment") {
+        value<0>(y) = 2;
+        value<1>(y) += " 2";
+        value<2>(y) = 1.23f;
 
-//         CHECK(value<0>(y) == 2);
-//         CHECK(value<1>(y) == "Test 2");
-//         CHECK(value<2>(y) == 1.23f);
+        CHECK(value<0>(y) == 2);
+        CHECK(value<1>(y) == "Test 2");
+        CHECK(value<2>(y) == 1.23f);
 
-//         x = y;
-//         CHECK(value<0>(x) == 2);
-//         CHECK(value<1>(x) == "Test 2");
-//         CHECK(value<2>(x) == 1.23f);
-//       }
+        x = y;
+        CHECK(value<0>(x) == 2);
+        CHECK(value<1>(x) == "Test 2");
+        CHECK(value<2>(x) == 1.23f);
+      }
 
-//       SUBCASE("Move Assignment") {
-//         value<0>(y) = 2;
-//         value<1>(y) += " 2";
-//         value<2>(y) = 1.23f;
+      SUBCASE("Move Assignment") {
+        value<0>(y) = 2;
+        value<1>(y) += " 2";
+        value<2>(y) = 1.23f;
 
-//         x = move(y);
-//         CHECK(value<0>(x) == 2);
-//         CHECK(value<1>(x) == "Test 2");
-//         CHECK(value<2>(x) == 1.23f);
-//         //
-//         // CHECK(value<0>(y) == 2);
-//         // CHECK(value<1>(y) == "");
-//         // CHECK(value<2>(y) == 1.23f);
-//       }
-//     }
+        x = move(y);
+        CHECK(value<0>(x) == 2);
+        CHECK(value<1>(x) == "Test 2");
+        CHECK(value<2>(x) == 1.23f);
+        //
+        // CHECK(value<0>(y) == 2);
+        // CHECK(value<1>(y) == "");
+        // CHECK(value<2>(y) == 1.23f);
+      }
+    }
 
-//     SUBCASE("Move Constructor") {
-//       tuple_type y = move(x);
-//       CHECK(value<0>(y) == -1);
-//       CHECK(value<1>(y) == "Test");
-//       CHECK(value<2>(y) == 3.14f);
-//       //
-//       // CHECK(value<0>(x) == -1);
-//       // CHECK(value<1>(x) == "");
-//       // CHECK(value<2>(x) == 3.14f);
-//     }
-//   }
+    SUBCASE("Move Constructor") {
+      tuple_type y = move(x);
+      CHECK(value<0>(y) == -1);
+      CHECK(value<1>(y) == "Test");
+      CHECK(value<2>(y) == 3.14f);
+      //
+      // CHECK(value<0>(x) == -1);
+      // CHECK(value<1>(x) == "");
+      // CHECK(value<2>(x) == 3.14f);
+    }
+  }
 
-//   SUBCASE("Conversions and Assignments from Convertible Tuples") {
-//     using other_tuple_type = regular_tuple<size_t, czstring, double>;
-//     other_tuple_type x{1, "Hello", 3.14};
+  // SUBCASE("Conversions and Assignments from Convertible Tuples") {
+  //   using other_tuple_type = regular_tuple<size_t, czstring, double>;
+  //   other_tuple_type x{1, "Hello", 3.14};
 
-//     // Has to be down explicitly.
-//     tuple_type y{x};
-//     CHECK(value<0>(y) == 1);
-//     CHECK(value<1>(y) == "Hello");
-//     CHECK(value<2>(y) == 3.14f);
+  //   // Has to be done explicitly.
+  //   tuple_type y{x};
+  //   CHECK(value<0>(y) == 1);
+  //   CHECK(value<1>(y) == "Hello");
+  //   CHECK(value<2>(y) == 3.14f);
 
-//     value<0>(x) = 2;
-//     value<1>(x) = "Something";
-//     value<2>(x) = 1.23;
+  //   value<0>(x) = 2;
+  //   value<1>(x) = "Something";
+  //   value<2>(x) = 1.23;
 
-//     y = x;
-//     CHECK(value<0>(y) == 2);
-//     CHECK(value<1>(y) == "Something");
-//     CHECK(value<2>(y) == 1.23f);
-//   }
-// }
+  //   y = x;
+  //   CHECK(value<0>(y) == 2);
+  //   CHECK(value<1>(y) == "Something");
+  //   CHECK(value<2>(y) == 1.23f);
+  // }
+}
 
 // SCENARIO("Regular Tuple Class Template Argument Deduction") {
 //   int data = 1;
@@ -279,16 +365,16 @@ SCENARIO("Regular Tuple Size, Alignment, and Offset") {
 //                   &data, &cdata, ref(data), cref(data), move(data)};
 //   // meta::print_type(x);
 //   using tuple_type = decltype(x);
-//   static_assert(meta::equal<int, tuple_type::template type<0>>);
-//   static_assert(meta::equal<char, tuple_type::template type<1>>);
-//   static_assert(meta::equal<float, tuple_type::template type<2>>);
-//   static_assert(meta::equal<double, tuple_type::template type<3>>);
-//   static_assert(meta::equal<czstring, tuple_type::template type<4>>);
-//   static_assert(meta::equal<int*, tuple_type::template type<5>>);
-//   static_assert(meta::equal<const int*, tuple_type::template type<6>>);
-//   static_assert(meta::equal<int&, tuple_type::template type<7>>);
-//   static_assert(meta::equal<const int&, tuple_type::template type<8>>);
-//   static_assert(meta::equal<int, tuple_type::template type<9>>);
+//   static_assert(std::same_as<int, tuple_type::template type<0>>);
+//   static_assert(std::same_as<char, tuple_type::template type<1>>);
+//   static_assert(std::same_as<float, tuple_type::template type<2>>);
+//   static_assert(std::same_as<double, tuple_type::template type<3>>);
+//   static_assert(std::same_as<czstring, tuple_type::template type<4>>);
+//   static_assert(std::same_as<int*, tuple_type::template type<5>>);
+//   static_assert(std::same_as<const int*, tuple_type::template type<6>>);
+//   static_assert(std::same_as<int&, tuple_type::template type<7>>);
+//   static_assert(std::same_as<const int&, tuple_type::template type<8>>);
+//   static_assert(std::same_as<int, tuple_type::template type<9>>);
 // }
 
 // SCENARIO("Regular Tuple Structured Bindings") {
@@ -301,50 +387,50 @@ SCENARIO("Regular Tuple Size, Alignment, and Offset") {
 //     auto x = value<0>(v);
 //     auto y = value<1>(v);
 //     auto z = value<2>(v);
-//     static_assert(meta::equal<int, decltype(x)>);
-//     static_assert(meta::equal<int, decltype(y)>);
-//     static_assert(meta::equal<int, decltype(z)>);
+//     static_assert(std::same_as<int, decltype(x)>);
+//     static_assert(std::same_as<int, decltype(y)>);
+//     static_assert(std::same_as<int, decltype(z)>);
 //   }
 //   {
 //     auto& x = value<0>(v);
 //     auto& y = value<1>(v);
 //     auto& z = value<2>(v);
-//     static_assert(meta::equal<int&, decltype(x)>);
-//     static_assert(meta::equal<int&, decltype(y)>);
-//     static_assert(meta::equal<const int&, decltype(z)>);
+//     static_assert(std::same_as<int&, decltype(x)>);
+//     static_assert(std::same_as<int&, decltype(y)>);
+//     static_assert(std::same_as<const int&, decltype(z)>);
 //   }
 //   {
 //     const auto& x = value<0>(v);
 //     const auto& y = value<1>(v);
 //     const auto& z = value<2>(v);
-//     static_assert(meta::equal<const int&, decltype(x)>);
-//     static_assert(meta::equal<const int&, decltype(y)>);
-//     static_assert(meta::equal<const int&, decltype(z)>);
+//     static_assert(std::same_as<const int&, decltype(x)>);
+//     static_assert(std::same_as<const int&, decltype(y)>);
+//     static_assert(std::same_as<const int&, decltype(z)>);
 //   }
 //   //
 //   {
 //     auto x = value<0>(move(v));
 //     auto y = value<1>(move(v));
 //     auto z = value<2>(move(v));
-//     static_assert(meta::equal<int, decltype(x)>);
-//     static_assert(meta::equal<int, decltype(y)>);
-//     static_assert(meta::equal<int, decltype(z)>);
+//     static_assert(std::same_as<int, decltype(x)>);
+//     static_assert(std::same_as<int, decltype(y)>);
+//     static_assert(std::same_as<int, decltype(z)>);
 //   }
 //   {
 //     auto&& x = value<0>(move(v));
 //     auto&& y = value<1>(move(v));
 //     auto&& z = value<2>(move(v));
-//     static_assert(meta::equal<int&&, decltype(x)>);
-//     static_assert(meta::equal<int&, decltype(y)>);
-//     static_assert(meta::equal<const int&, decltype(z)>);
+//     static_assert(std::same_as<int&&, decltype(x)>);
+//     static_assert(std::same_as<int&, decltype(y)>);
+//     static_assert(std::same_as<const int&, decltype(z)>);
 //   }
 //   {
 //     const auto& x = value<0>(move(v));
 //     const auto& y = value<1>(move(v));
 //     const auto& z = value<2>(move(v));
-//     static_assert(meta::equal<const int&, decltype(x)>);
-//     static_assert(meta::equal<const int&, decltype(y)>);
-//     static_assert(meta::equal<const int&, decltype(z)>);
+//     static_assert(std::same_as<const int&, decltype(x)>);
+//     static_assert(std::same_as<const int&, decltype(y)>);
+//     static_assert(std::same_as<const int&, decltype(z)>);
 //   }
 
 //   // Structured Bindings are really strange...
@@ -353,52 +439,52 @@ SCENARIO("Regular Tuple Size, Alignment, and Offset") {
 //   tuple<int, int&, const int&> w{data, data, data};
 //   {
 //     auto [x, y, z] = w;
-//     static_assert(meta::equal<int, decltype(x)>);
-//     static_assert(meta::equal<int&, decltype(y)>);
-//     static_assert(meta::equal<const int&, decltype(z)>);
+//     static_assert(std::same_as<int, decltype(x)>);
+//     static_assert(std::same_as<int&, decltype(y)>);
+//     static_assert(std::same_as<const int&, decltype(z)>);
 //   }
 //   {
 //     auto [x, y, z] = move(w);
-//     static_assert(meta::equal<int, decltype(x)>);
-//     static_assert(meta::equal<int&, decltype(y)>);
-//     static_assert(meta::equal<const int&, decltype(z)>);
+//     static_assert(std::same_as<int, decltype(x)>);
+//     static_assert(std::same_as<int&, decltype(y)>);
+//     static_assert(std::same_as<const int&, decltype(z)>);
 //   }
 //   {
 //     auto& [x, y, z] = w;
-//     static_assert(meta::equal<int, decltype(x)>);
-//     static_assert(meta::equal<int&, decltype(y)>);
-//     static_assert(meta::equal<const int&, decltype(z)>);
+//     static_assert(std::same_as<int, decltype(x)>);
+//     static_assert(std::same_as<int&, decltype(y)>);
+//     static_assert(std::same_as<const int&, decltype(z)>);
 //   }
 //   {
 //     const auto& [x, y, z] = w;
-//     static_assert(meta::equal<const int, decltype(x)>);
-//     static_assert(meta::equal<int&, decltype(y)>);
-//     static_assert(meta::equal<const int&, decltype(z)>);
+//     static_assert(std::same_as<const int, decltype(x)>);
+//     static_assert(std::same_as<int&, decltype(y)>);
+//     static_assert(std::same_as<const int&, decltype(z)>);
 //   }
 //   // The regular tuple...
 //   {
 //     auto [x, y, z] = v;
-//     static_assert(meta::equal<int, decltype(x)>);
-//     static_assert(meta::equal<int&, decltype(y)>);
-//     static_assert(meta::equal<const int&, decltype(z)>);
+//     static_assert(std::same_as<int, decltype(x)>);
+//     static_assert(std::same_as<int&, decltype(y)>);
+//     static_assert(std::same_as<const int&, decltype(z)>);
 //   }
 //   {
 //     auto [x, y, z] = move(v);
-//     static_assert(meta::equal<int, decltype(x)>);
-//     static_assert(meta::equal<int&, decltype(y)>);
-//     static_assert(meta::equal<const int&, decltype(z)>);
+//     static_assert(std::same_as<int, decltype(x)>);
+//     static_assert(std::same_as<int&, decltype(y)>);
+//     static_assert(std::same_as<const int&, decltype(z)>);
 //   }
 //   {
 //     auto& [x, y, z] = v;
-//     static_assert(meta::equal<int, decltype(x)>);
-//     static_assert(meta::equal<int&, decltype(y)>);
-//     static_assert(meta::equal<const int&, decltype(z)>);
+//     static_assert(std::same_as<int, decltype(x)>);
+//     static_assert(std::same_as<int&, decltype(y)>);
+//     static_assert(std::same_as<const int&, decltype(z)>);
 //   }
 //   {
 //     const auto& [x, y, z] = v;
-//     static_assert(meta::equal<const int, decltype(x)>);
-//     static_assert(meta::equal<int&, decltype(y)>);
-//     static_assert(meta::equal<const int&, decltype(z)>);
+//     static_assert(std::same_as<const int, decltype(x)>);
+//     static_assert(std::same_as<int&, decltype(y)>);
+//     static_assert(std::same_as<const int&, decltype(z)>);
 //   }
 // }
 

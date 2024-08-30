@@ -17,58 +17,112 @@
 //
 #pragma once
 #include <ensketch/xstd/match.hpp>
+#include <ensketch/xstd/memory.hpp>
+#include <ensketch/xstd/meta/permutation.hpp>
 #include <ensketch/xstd/tuple.hpp>
 
 namespace ensketch::xstd {
 
 template <typename... ts>
-struct regular_tuple_traits {
+struct basic_tuple_traits {
   static consteval auto types() noexcept { return meta::type_list<ts...>{}; }
-  static consteval auto indices() noexcept {
-    return meta::index_list_from_iota<size(types())>();
-  }
 
   template <size_t index>
   struct wrapper {
-    using type = meta::as_type<element<index>(types)>;
-    constexpr auto&& value(this auto&& self) noexcept {
-      return std::forward<decltype(self)>(self).data;
+    using type = meta::as_type<element<index>(types())>;
+
+    // constexpr auto&& value(this auto&& self) noexcept {
+    //   return std::forward_like<decltype(self)>(self.data);
+    // }
+
+    constexpr decltype(auto) value() & noexcept {
+      return static_cast<type&>(data);
+    }
+    constexpr decltype(auto) value() const& noexcept {
+      return static_cast<const type&>(data);
+    }
+    constexpr decltype(auto) value() && noexcept {
+      return static_cast<type&&>(data);
+    }
+    constexpr decltype(auto) value() const&& noexcept {
+      return static_cast<const type&&>(data);
     }
     type data;
   };
-
-  template <typename... t>
-  struct amalgamate : t... {};
-
-  template <meta::index_list_instance list>
-  struct base_selector;
-  //
-  template <size_t... i>
-  struct base_selector<meta::index_list<i...>> {
-    using type = amalgamate<wrapper<i>...>;
-  };
-  //
-  using base = typename base_selector<meta::as_type<indices>>::type;
 };
 
-template <typename... ts>
-struct regular_tuple : regular_tuple_traits<ts...>::base {
+template <meta::type_list_instance types,
+          meta::permutation_for<size(types{})> =
+              decltype(meta::permutation_identity<size(types{})>())>
+struct basic_tuple;
+
+template <typename... ts, size_t... indices>
+struct basic_tuple<meta::type_list<ts...>, meta::permutation<indices...>>
+    : basic_tuple_traits<ts...>::template wrapper<indices>... {
+  using traits_type = basic_tuple_traits<ts...>;
+
   static consteval auto types() noexcept { return meta::type_list<ts...>{}; }
-  static consteval auto detail() noexcept {
-    return meta::as_value<regular_tuple_traits<ts...>>;
+
+  static consteval auto permutation() noexcept {
+    return meta::permutation<indices...>{};
+  }
+
+  template <typename base>
+  constexpr auto forward_as() & noexcept -> base& {
+    return *this;
+  }
+  template <typename base>
+  constexpr auto forward_as() const& noexcept -> const base& {
+    return *this;
+  }
+  template <typename base>
+  constexpr auto forward_as() && noexcept -> base&& {
+    return std::move(*this);
+  }
+  template <typename base>
+  constexpr auto forward_as() const&& noexcept -> const base&& {
+    return std::move(*this);
+  }
+
+  template <size_t index>
+  constexpr auto&& value(this auto&& self) noexcept {
+    return std::forward<decltype(self)>(self)
+        .template forward_as<typename traits_type::template wrapper<index>>()
+        .value();
+  }
+
+  /// Returns the byte offset of an element given by index
+  /// inside the tuple structure.
+  ///
+  template <size_t index>
+  static consteval auto byte_offset() noexcept -> size_t {
+    if constexpr (index == 0)
+      return 0;
+    else
+      return aligned_offset(
+          byte_offset<index - 1>() +
+              sizeof(typename traits_type::template wrapper<index - 1>),
+          alignof(typename traits_type::template wrapper<index>));
   }
 };
 
+template <typename... types>
+using regular_tuple = basic_tuple<meta::type_list<types...>>;
+
+// template <typename... ts>
+// struct regular_tuple : basic_tuple_traits<ts...>::base {
+//   static consteval auto types() noexcept { return meta::type_list<ts...>{}; }
+// };
+
 template <typename type>
 concept regular_tuple_instance =
-    matches<type, []<typename... types>(regular_tuple<types...>) {
+    matches<type, []<typename... types>(const regular_tuple<types...>&) {
       return meta::as_signature<true>;
     }>;
 
 template <size_t index>
-constexpr auto value(regular_tuple_instance auto&& t) noexcept {
-  using detail = meta::as_type<std::decay_t<decltype(t)>::detail()>;
-  return static_cast<detail::template wrapper<index>>(t).value();
+constexpr auto&& value(regular_tuple_instance auto&& t) noexcept {
+  return std::forward<decltype(t)>(t).template value<index>();
 }
 
 }  // namespace ensketch::xstd
