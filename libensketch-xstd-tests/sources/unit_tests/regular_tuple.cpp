@@ -1,107 +1,117 @@
+// Copyright © 2024 Markus Pawellek
+//
+// This file is part of `xstd`.
+//
+// `xstd` is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License,
+// or (at your option) any later version.
+//
+// `xstd` is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty
+// of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with `xstd`. If not, see <https://www.gnu.org/licenses/>.
+//
 #include <doctest/doctest.h>
 //
-// #include <array>
-// #include <iomanip>
-// #include <iostream>
-// #include <string>
-// #include <vector>
-//
-//
-// #include <ensketch/xstd/regular_tuple.hpp>
+#include <ensketch/xstd/regular_tuple.hpp>
 //
 #include "log_value.hpp"
 
-// using namespace std;
-// using namespace xstd;
+using namespace std;
+using namespace ensketch::xstd;
 
-// namespace {
+namespace {
 
-// struct nothing {};
+struct nothing {};
 
-// struct uint8x2 : array<uint8, 2> {};
-// struct uint8x3 : array<uint8, 3> {};
-// struct uint8x5 : array<uint8, 5> {};
+struct uint8x2 : array<uint8, 2> {};
+struct uint8x3 : array<uint8, 3> {};
+struct uint8x5 : array<uint8, 5> {};
 
-// }  // namespace
+}  // namespace
 
-// SCENARIO("Size and Alignment of Basic Types") {
-//   static_assert(sizeof(nothing) == 1);
-//   static_assert(alignof(nothing) == 1);
-//   //
-//   static_assert(sizeof(uint8) == 1);
-//   static_assert(alignof(uint8) == 1);
-//   //
-//   static_assert(sizeof(uint8x2) == 2);
-//   static_assert(alignof(uint8x2) == 1);
-//   //
-//   static_assert(sizeof(uint8x3) == 3);
-//   static_assert(alignof(uint8x3) == 1);
-//   //
-//   static_assert(sizeof(uint8x5) == 5);
-//   static_assert(alignof(uint8x5) == 1);
-// }
+SCENARIO("Size and Alignment of Basic Types") {
+  static_assert(sizeof(nothing) == 1);
+  static_assert(alignof(nothing) == 1);
+  //
+  static_assert(sizeof(uint8) == 1);
+  static_assert(alignof(uint8) == 1);
+  //
+  static_assert(sizeof(uint8x2) == 2);
+  static_assert(alignof(uint8x2) == 1);
+  //
+  static_assert(sizeof(uint8x3) == 3);
+  static_assert(alignof(uint8x3) == 1);
+  //
+  static_assert(sizeof(uint8x5) == 5);
+  static_assert(alignof(uint8x5) == 1);
+}
 
-// SCENARIO("Regular Tuple Size, Alignment, and Offset") {
-//   static_assert(sizeof(regular_tuple<>) == 1);
-//   static_assert(alignof(regular_tuple<>) == 1);
+SCENARIO("Regular Tuple Size, Alignment, and Offset") {
+  // static_assert(sizeof(regular_tuple<>) == 1);
+  // static_assert(alignof(regular_tuple<>) == 1);
 
-//   static_assert(sizeof(regular_tuple<uint8, uint32>) == 8);
-//   static_assert(alignof(regular_tuple<uint8, uint32>) == 4);
-//   //
-//   static_assert(sizeof(regular_tuple<uint8, uint8, uint32>) == 8);
-//   static_assert(alignof(regular_tuple<uint8, uint8, uint32>) == 4);
+  // static_assert(sizeof(regular_tuple<uint8, uint32>) == 8);
+  // static_assert(alignof(regular_tuple<uint8, uint32>) == 4);
+  // //
+  // static_assert(sizeof(regular_tuple<uint8, uint8, uint32>) == 8);
+  // static_assert(alignof(regular_tuple<uint8, uint8, uint32>) == 4);
 
-//   using types = type_list<               //
-//       nothing,                           //
-//       uint8, uint8x2, uint8x3, uint8x5,  //
-//       uint16, uint32, uint64,            //
-//       // float32, float64,                  //
-//       string, /*int&,*/ czstring>;
+  //   using types = type_list<               //
+  //       nothing,                           //
+  //       uint8, uint8x2, uint8x3, uint8x5,  //
+  //       uint16, uint32, uint64,            //
+  //       // float32, float64,                  //
+  //       string, /*int&,*/ czstring>;
 
-//   types::for_each([]<typename type> {
-//     {
-//       struct test {
-//         type x;
-//       };
-//       using tuple_type = regular_tuple<type>;
-//       static_assert(sizeof(tuple_type) == sizeof(test));
-//       static_assert(alignof(tuple_type) == alignof(test));
-//     }
+  //   types::for_each([]<typename type> {
+  //     {
+  //       struct test {
+  //         type x;
+  //       };
+  //       using tuple_type = regular_tuple<type>;
+  //       static_assert(sizeof(tuple_type) == sizeof(test));
+  //       static_assert(alignof(tuple_type) == alignof(test));
+  //     }
 
-//     types::for_each([]<typename type2> {
-//       struct test {
-//         type x;
-//         type2 y;
-//       };
-//       using tuple_type = regular_tuple<type, type2>;
+  //     types::for_each([]<typename type2> {
+  //       struct test {
+  //         type x;
+  //         type2 y;
+  //       };
+  //       using tuple_type = regular_tuple<type, type2>;
 
-//       static_assert(sizeof(tuple_type) == sizeof(test));
-//       static_assert(alignof(tuple_type) == alignof(test));
-//       static_assert(offsetof(test, x) ==
-//                     meta::tuple::byte_offset<tuple_type, 0>);
-//       static_assert(offsetof(test, y) ==
-//                     meta::tuple::byte_offset<tuple_type, 1>);
+  //       static_assert(sizeof(tuple_type) == sizeof(test));
+  //       static_assert(alignof(tuple_type) == alignof(test));
+  //       static_assert(offsetof(test, x) ==
+  //                     meta::tuple::byte_offset<tuple_type, 0>);
+  //       static_assert(offsetof(test, y) ==
+  //                     meta::tuple::byte_offset<tuple_type, 1>);
 
-//       types::for_each([]<typename type3> {
-//         struct test {
-//           type x;
-//           type2 y;
-//           type3 z;
-//         };
-//         using tuple_type = regular_tuple<type, type2, type3>;
+  //       types::for_each([]<typename type3> {
+  //         struct test {
+  //           type x;
+  //           type2 y;
+  //           type3 z;
+  //         };
+  //         using tuple_type = regular_tuple<type, type2, type3>;
 
-//         static_assert(sizeof(tuple_type) == sizeof(test));
-//         static_assert(alignof(tuple_type) == alignof(test));
-//         static_assert(offsetof(test, x) ==
-//                       meta::tuple::byte_offset<tuple_type, 0>);
-//         static_assert(offsetof(test, y) ==
-//                       meta::tuple::byte_offset<tuple_type, 1>);
-//         static_assert(offsetof(test, z) ==
-//                       meta::tuple::byte_offset<tuple_type, 2>);
-//       });
-//     });
-//   });
-// }
+  //         static_assert(sizeof(tuple_type) == sizeof(test));
+  //         static_assert(alignof(tuple_type) == alignof(test));
+  //         static_assert(offsetof(test, x) ==
+  //                       meta::tuple::byte_offset<tuple_type, 0>);
+  //         static_assert(offsetof(test, y) ==
+  //                       meta::tuple::byte_offset<tuple_type, 1>);
+  //         static_assert(offsetof(test, z) ==
+  //                       meta::tuple::byte_offset<tuple_type, 2>);
+  //       });
+  //     });
+  //   });
+}
 
 // SCENARIO("Regular Tuple Element Access") {
 //   { regular_tuple<> x{}; }
