@@ -73,6 +73,21 @@ static_assert(!test_list_match<int>);
 static_assert(!test_list_match<float>);
 static_assert(!test_list_match<char>);
 
+struct non_copyable {
+  non_copyable() = default;
+  non_copyable(const non_copyable&) = delete;
+  non_copyable& operator=(const non_copyable&) = delete;
+  non_copyable(non_copyable&&) = default;
+  non_copyable& operator=(non_copyable&&) = default;
+};
+struct non_movable {
+  non_movable() = default;
+  non_movable(const non_movable&) = delete;
+  non_movable& operator=(const non_movable&) = delete;
+  non_movable(non_movable&&) = delete;
+  non_movable& operator=(non_movable&&) = delete;
+};
+
 // Prepared Matcher
 //
 constexpr auto test_list_matcher = match{
@@ -121,6 +136,10 @@ concept test_match =
                 [](const float&) { return as_signature<true>; },
                 // Allow values of type `int`.
                 [](int) { return as_signature<true>; },
+                //
+                [](non_movable) { return as_signature<true>; },
+                //
+                [](non_copyable) { return as_signature<true>; },
             }>;
 
 /// Test valid and invalid matches for `test_match`.
@@ -167,6 +186,44 @@ static_assert(!test_match<char&>);
 static_assert(!test_match<char&&>);
 static_assert(!test_match<const char&>);
 static_assert(!test_match<const char&&>);
+//
+// Non-Movable Types cannot be matched by value.
+//
+static_assert(!test_match<non_movable>);
+static_assert(!test_match<non_movable&>);
+static_assert(!test_match<non_movable&&>);
+static_assert(!test_match<const non_movable&>);
+static_assert(!test_match<const non_movable&&>);
+//
+// For non-copyable but movable types,
+// only values and rvalues can be captured.
+//
+static_assert(test_match<non_copyable>);
+static_assert(!test_match<non_copyable&>);
+static_assert(test_match<non_copyable&&>);
+static_assert(!test_match<const non_copyable&>);
+static_assert(!test_match<const non_copyable&&>);
+
+// Non-movable and non-copyable types can
+// be captured by using a const reference.
+//
+template <typename type>
+concept matches_all =
+    matches<type,
+            [](const non_copyable&) { return as_signature<true>; },
+            [](const non_movable&) { return as_signature<true>; }>;
+//
+static_assert(matches_all<non_movable>);
+static_assert(matches_all<non_movable&>);
+static_assert(matches_all<non_movable&&>);
+static_assert(matches_all<const non_movable&>);
+static_assert(matches_all<const non_movable&&>);
+//
+static_assert(matches_all<non_copyable>);
+static_assert(matches_all<non_copyable&>);
+static_assert(matches_all<non_copyable&&>);
+static_assert(matches_all<const non_copyable&>);
+static_assert(matches_all<const non_copyable&&>);
 
 // enum class error { negative };
 // using result = std::variant<float, error>;
