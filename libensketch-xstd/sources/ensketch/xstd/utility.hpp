@@ -42,4 +42,37 @@ concept generic_irreducible = generic_reducible<x, x>;
 template <typename type>
 concept generic_tag = std::is_empty_v<type>;
 
+namespace detail {
+
+template <typename from, typename to>
+struct propagate_const_ref {
+  using type = to;
+};
+
+template <typename from, typename to>
+struct propagate_const_ref<from&, to> {
+  using type = to&;
+};
+
+template <typename from, typename to>
+struct propagate_const_ref<from const&, to> {
+  using type = std::add_lvalue_reference_t<std::add_const_t<to>>;
+};
+
+template <typename from, typename to>
+struct propagate_const_ref<from&&, to> {
+  using type = to&&;
+};
+
+template <typename from, typename to>
+struct propagate_const_ref<from const&&, to> {
+  using type = std::add_rvalue_reference_t<std::add_const_t<to>>;
+};
+
+}  // namespace detail
+
+template <typename from, typename to>
+using propagate_const_ref =
+    typename detail::propagate_const_ref<from, to>::type;
+
 }  // namespace ensketch::xstd

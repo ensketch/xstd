@@ -103,7 +103,7 @@ SCENARIO("Regular Tuple Size, Alignment, and Offset") {
       static_assert(offsetof(test, x) == tuple_type::template byte_offset<0>());
       static_assert(offsetof(test, y) == tuple_type::template byte_offset<1>());
 
-      tuple_type x{};
+      constexpr tuple_type x{};
       CHECK((dynamic_offset<0>(x)) == tuple_type::template byte_offset<0>());
       CHECK((dynamic_offset<1>(x)) == tuple_type::template byte_offset<1>());
 
@@ -510,17 +510,17 @@ SCENARIO("Regular Tuple Constructors and Assignments") {
 //   CHECK(value<2>(y) == 1.23f);
 // }
 
-// SCENARIO("Regular Tuple Total Ordering") {
-//   using tuple_type = regular_tuple<int, char, float>;
-//   static_assert(tuple_type{-1, 'c', 1.23f} == tuple_type{-1, 'c', 1.23f});
-//   static_assert(tuple_type{-1, 'c', 1.23f} <= tuple_type{-1, 'c', 1.23f});
-//   static_assert(tuple_type{-1, 'c', 1.23f} >= tuple_type{-1, 'c', 1.23f});
-//   static_assert(tuple_type{-1, 'c', 1.23f} != tuple_type{-1, 'c', 3.14f});
-//   static_assert(tuple_type{-1, 'c', 1.23f} < tuple_type{-1, 'c', 3.14f});
-//   static_assert(tuple_type{-1, 'c', 1.23f} <= tuple_type{-1, 'c', 3.14f});
-//   static_assert(tuple_type{-1, 'c', 9.0f} >= tuple_type{-1, 'c', 3.14f});
-//   static_assert(tuple_type{-1, 'c', 9.0f} > tuple_type{-1, 'c', 3.14f});
-// }
+SCENARIO("Regular Tuple Total Ordering") {
+  using tuple_type = regular_tuple<int, char, float>;
+  static_assert(tuple_type{-1, 'c', 1.23f} == tuple_type{-1, 'c', 1.23f});
+  static_assert(tuple_type{-1, 'c', 1.23f} <= tuple_type{-1, 'c', 1.23f});
+  static_assert(tuple_type{-1, 'c', 1.23f} >= tuple_type{-1, 'c', 1.23f});
+  static_assert(tuple_type{-1, 'c', 1.23f} != tuple_type{-1, 'c', 3.14f});
+  static_assert(tuple_type{-1, 'c', 1.23f} < tuple_type{-1, 'c', 3.14f});
+  static_assert(tuple_type{-1, 'c', 1.23f} <= tuple_type{-1, 'c', 3.14f});
+  static_assert(tuple_type{-1, 'c', 9.0f} >= tuple_type{-1, 'c', 3.14f});
+  static_assert(tuple_type{-1, 'c', 9.0f} > tuple_type{-1, 'c', 3.14f});
+}
 
 // // SCENARIO("Regular Tuple Dynamic Memory Layout") {}
 
@@ -537,73 +537,113 @@ SCENARIO("Regular Tuple Constructors and Assignments") {
 
 // }  // namespace
 
-// SCENARIO("Regular Tuple Preservation of Type Traits") {
-//   static_assert(is_standard_layout_v<regular_tuple<>>);
+SCENARIO("Regular Tuple Preservation of Type Traits") {
+  static_assert(is_standard_layout_v<regular_tuple<>>);
 
-//   using tuples = type_list<regular_tuple<int, string>,       //
-//                            regular_tuple<uint8, uint64>,     //
-//                            regular_tuple<czstring, string>,  //
-//                            regular_tuple<int, float>>;
+  constexpr auto tuples = meta::type_list<regular_tuple<int, string>,       //
+                                          regular_tuple<uint8, uint64>,     //
+                                          regular_tuple<czstring, string>,  //
+                                          regular_tuple<int, float>>{};
 
-//   tuples::for_each([]<typename tuple_type> {
-//     using types = typename tuple_type::types;
+  for_each(tuples, []<typename tuple_type> {
+    constexpr auto types = tuple_type::types();
 
-//     // Default Construction
-//     static_assert(is_default_constructible_v<tuple_type> ==
-//                   all<types, is_default_constructible>);
-//     static_assert(is_trivially_default_constructible_v<tuple_type> ==
-//                   all<types, is_trivially_default_constructible>);
-//     static_assert(is_nothrow_default_constructible_v<tuple_type> ==
-//                   all<types, is_nothrow_default_constructible>);
-//     // Copy Construction
-//     static_assert(is_copy_constructible_v<tuple_type> ==
-//                   all<types, is_copy_constructible>);
-//     static_assert(is_trivially_copy_constructible_v<tuple_type> ==
-//                   all<types, is_trivially_copy_constructible>);
-//     static_assert(is_nothrow_copy_constructible_v<tuple_type> ==
-//                   all<types, is_nothrow_copy_constructible>);
-//     // Move Construction
-//     static_assert(is_move_constructible_v<tuple_type> ==
-//                   all<types, is_move_constructible>);
-//     static_assert(is_trivially_move_constructible_v<tuple_type> ==
-//                   all<types, is_trivially_move_constructible>);
-//     static_assert(is_nothrow_move_constructible_v<tuple_type> ==
-//                   all<types, is_nothrow_move_constructible>);
-//     // Destruction
-//     static_assert(is_destructible_v<tuple_type> == all<types, is_destructible>);
-//     static_assert(is_trivially_destructible_v<tuple_type> ==
-//                   all<types, is_trivially_destructible>);
-//     static_assert(is_nothrow_destructible_v<tuple_type> ==
-//                   all<types, is_nothrow_destructible>);
-//     // Copy Assignment
-//     static_assert(is_copy_assignable_v<tuple_type> ==
-//                   all<types, is_copy_assignable>);
-//     static_assert(is_trivially_copy_assignable_v<tuple_type> ==
-//                   all<types, is_trivially_copy_assignable>);
-//     static_assert(is_nothrow_copy_assignable_v<tuple_type> ==
-//                   all<types, is_nothrow_copy_assignable>);
-//     // Move Assignment
-//     static_assert(is_move_assignable_v<tuple_type> ==
-//                   all<types, is_move_assignable>);
-//     static_assert(is_trivially_move_assignable_v<tuple_type> ==
-//                   all<types, is_trivially_move_assignable>);
-//     static_assert(is_nothrow_move_assignable_v<tuple_type> ==
-//                   all<types, is_nothrow_move_assignable>);
-//     // Swap
-//     static_assert(is_swappable_v<tuple_type> == all<types, is_swappable>);
-//     static_assert(is_nothrow_swappable_v<tuple_type> ==
-//                   all<types, is_nothrow_swappable>);
-//     //
-//     // GCC fulfills assertions for triviality. Clang throws an error.
-//     // static_assert(is_trivial_v<tuple_type> == all<types, is_trivial>);
-//     // static_assert(is_trivial_v<tuple_type> ==
-//     //               is_trivial_v<typename tuple_type::tuple_type>);
-//     // static_assert(is_standard_layout_v<tuple_type> ==
-//     //               all<types, is_standard_layout>);
-//     static_assert(is_trivially_copyable_v<tuple_type> ==
-//                   all<types, is_trivially_copyable>);
-//   });
-// }
+    // Default Construction
+    static_assert(is_default_constructible_v<tuple_type> ==
+                  all_of(types, []<typename type> {
+                    return is_default_constructible_v<type>;
+                  }));
+    static_assert(is_trivially_default_constructible_v<tuple_type> ==
+                  all_of(types, []<typename type> {
+                    return is_trivially_default_constructible_v<type>;
+                  }));
+    static_assert(is_nothrow_default_constructible_v<tuple_type> ==
+                  all_of(types, []<typename type> {
+                    return is_nothrow_default_constructible_v<type>;
+                  }));
+    // Copy Construction
+    static_assert(is_copy_constructible_v<tuple_type> ==
+                  all_of(types, []<typename type> {
+                    return is_copy_constructible_v<type>;
+                  }));
+    static_assert(is_trivially_copy_constructible_v<tuple_type> ==
+                  all_of(types, []<typename type> {
+                    return is_trivially_copy_constructible_v<type>;
+                  }));
+    static_assert(is_nothrow_copy_constructible_v<tuple_type> ==
+                  all_of(types, []<typename type> {
+                    return is_nothrow_copy_constructible_v<type>;
+                  }));
+    // Move Construction
+    static_assert(is_move_constructible_v<tuple_type> ==
+                  all_of(types, []<typename type> {
+                    return is_move_constructible_v<type>;
+                  }));
+    static_assert(is_trivially_move_constructible_v<tuple_type> ==
+                  all_of(types, []<typename type> {
+                    return is_trivially_move_constructible_v<type>;
+                  }));
+    static_assert(is_nothrow_move_constructible_v<tuple_type> ==
+                  all_of(types, []<typename type> {
+                    return is_nothrow_move_constructible_v<type>;
+                  }));
+    // Destruction
+    static_assert(
+        is_destructible_v<tuple_type> ==
+        all_of(types, []<typename type> { return is_destructible_v<type>; }));
+    static_assert(is_trivially_destructible_v<tuple_type> ==
+                  all_of(types, []<typename type> {
+                    return is_trivially_destructible_v<type>;
+                  }));
+    static_assert(is_nothrow_destructible_v<tuple_type> ==
+                  all_of(types, []<typename type> {
+                    return is_nothrow_destructible_v<type>;
+                  }));
+    // Copy Assignment
+    static_assert(is_copy_assignable_v<tuple_type> ==
+                  all_of(types, []<typename type> {
+                    return is_copy_assignable_v<type>;
+                  }));
+    static_assert(is_trivially_copy_assignable_v<tuple_type> ==
+                  all_of(types, []<typename type> {
+                    return is_trivially_copy_assignable_v<type>;
+                  }));
+    static_assert(is_nothrow_copy_assignable_v<tuple_type> ==
+                  all_of(types, []<typename type> {
+                    return is_nothrow_copy_assignable_v<type>;
+                  }));
+    // Move Assignment
+    static_assert(is_move_assignable_v<tuple_type> ==
+                  all_of(types, []<typename type> {
+                    return is_move_assignable_v<type>;
+                  }));
+    static_assert(is_trivially_move_assignable_v<tuple_type> ==
+                  all_of(types, []<typename type> {
+                    return is_trivially_move_assignable_v<type>;
+                  }));
+    static_assert(is_nothrow_move_assignable_v<tuple_type> ==
+                  all_of(types, []<typename type> {
+                    return is_nothrow_move_assignable_v<type>;
+                  }));
+    // Swap
+    static_assert(
+        is_swappable_v<tuple_type> ==
+        all_of(types, []<typename type> { return is_swappable_v<type>; }));
+    static_assert(is_nothrow_swappable_v<tuple_type> ==
+                  all_of(types, []<typename type> {
+                    return is_nothrow_swappable_v<type>;
+                  }));
+    //
+    // GCC fulfills assertions for triviality. Clang throws an error.
+    // static_assert(is_trivial_v<tuple_type> == all_of(types, is_trivial));
+    // static_assert(is_trivial_v<tuple_type> ==
+    //               is_trivial_v<typename tuple_type::tuple_type>);
+    // static_assert(is_standard_layout_v<tuple_type> ==
+    //               all_of(types, is_standard_layout));
+    // static_assert(is_trivially_copyable_v<tuple_type> ==
+    //               all_of(types, is_trivially_copyable));
+  });
+}
 
 // // SCENARIO("Constexpr Regular Tuple") {}
 

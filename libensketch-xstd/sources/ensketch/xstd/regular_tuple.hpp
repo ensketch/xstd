@@ -47,6 +47,10 @@ struct basic_tuple_traits {
     constexpr decltype(auto) value() const&& noexcept {
       return static_cast<const type&&>(data);
     }
+
+    friend constexpr auto operator<=>(const wrapper&,
+                                      const wrapper&) noexcept = default;
+
     type data;
   };
 };
@@ -62,6 +66,9 @@ struct basic_tuple<meta::type_list<ts...>, meta::permutation<indices...>>
   using traits_type = basic_tuple_traits<ts...>;
 
   static consteval auto types() noexcept { return meta::type_list<ts...>{}; }
+
+  friend constexpr auto operator<=>(const basic_tuple&,
+                                    const basic_tuple&) noexcept = default;
 
   static consteval auto permutation() noexcept {
     return meta::permutation<indices...>{};
@@ -105,6 +112,9 @@ struct basic_tuple<meta::type_list<ts...>, meta::permutation<indices...>>
           alignof(typename traits_type::template wrapper<index>));
   }
 };
+
+template <typename... types>
+basic_tuple(types&&...) -> basic_tuple<std::unwrap_ref_decay_t<types>...>;
 
 template <typename... types>
 using regular_tuple = basic_tuple<meta::type_list<types...>>;
