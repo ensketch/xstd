@@ -107,7 +107,7 @@ using namespace ensketch::xstd;
 using namespace ensketch::xstd::meta;
 using namespace std;
 
-template <detail::radix_tree::node_instance root, meta::string prefix>
+template <meta::detail::radix_tree::node_instance root, meta::string prefix>
 constexpr void print() {
   constexpr auto str = prefix + '|' + root::prefix;
   for_each(typename root::children{},
@@ -144,9 +144,9 @@ inline void print_traverse(radix_tree_instance auto tree, czstring cstr) {
 }
 
 int main() {
-  using detail::radix_tree::leaf;
-  using detail::radix_tree::node;
-  using detail::radix_tree::node_list;
+  using meta::detail::radix_tree::leaf;
+  using meta::detail::radix_tree::node;
+  using meta::detail::radix_tree::node_list;
 
   // meta::print_type(
   //     static_radix_tree_from<"help", "hello", "version", "verbose", "very",

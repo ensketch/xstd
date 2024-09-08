@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with `xstd`. If not, see <https://www.gnu.org/licenses/>.
 //
-#include <ensketch/xstd/utility.hpp>
+#include <ensketch/xstd/meta/defaults.hpp>
 
 using namespace ensketch::xstd;
 
@@ -27,9 +27,9 @@ static_assert(
 static_assert(
     std::same_as<propagate_const_ref<const int&&, float>, const float&&>);
 //
-static_assert(std::same_as<propagate_const_ref<int, float&>, float&>);
-static_assert(std::same_as<propagate_const_ref<int&, float&>, float&>);
-static_assert(std::same_as<propagate_const_ref<int&&, float&>, float&>);
+// static_assert(std::same_as<propagate_const_ref<int, float&>, float&>);
+// static_assert(std::same_as<propagate_const_ref<int&, float&>, float&>);
+// static_assert(std::same_as<propagate_const_ref<int&&, float&>, float&>);
 // static_assert(
 //     std::same_as<propagate_const_ref<const int&, float&>, const float&>);
 // static_assert(

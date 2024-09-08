@@ -1,26 +1,27 @@
-intf_libs = # Interface dependencies.
+# Library Sources
+#
+lib{ensketch-xstd}: {hxx ixx txx}{** -version} hxx{version}
 
-lib{ensketch-xstd}: {hxx ixx txx}{** -version} hxx{version} $intf_libs
-
+# Version Header
+#
 hxx{version}: in{version} $src_root/manifest
 
-# Build options.
+# Include Paths
 #
 out_pfx = [dir_path] $out_root/sources/
 src_pfx = [dir_path] $src_root/sources/
-
 cxx.poptions =+ "-I$out_pfx" "-I$src_pfx"
+lib{ensketch-xstd}: cxx.export.poptions = "-I$out_pfx" "-I$src_pfx"
 
-# Export options.
+# Linking `pthread` Library
 #
-lib{ensketch-xstd}:
+if ($cxx.target.system != 'win32-msvc')
 {
-  cxx.export.poptions = "-I$out_pfx" "-I$src_pfx"
-  cxx.export.libs = $intf_libs
+  cxx.libs += -pthread
+  lib{ensketch-xstd}: cxx.export.libs += -pthread
 }
 
-# Install into the ensketch/xstd/ subdirectory of, say, /usr/include/
-# recreating subdirectories.
+# Installation
 #
 {hxx ixx txx}{*}:
 {

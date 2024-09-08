@@ -17,7 +17,7 @@
 //
 #include <doctest/doctest.h>
 //
-#include <ensketch/xstd/regular_tuple.hpp>
+#include <ensketch/xstd/functional/basic_tuple.hpp>
 //
 #include "log_value.hpp"
 

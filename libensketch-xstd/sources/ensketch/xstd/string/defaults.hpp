@@ -16,4 +16,27 @@
 // along with `xstd`. If not, see <https://www.gnu.org/licenses/>.
 //
 #pragma once
-#include <ensketch/xstd/memory/defaults.hpp>
+#include <ensketch/xstd/defaults.hpp>
+//
+#include <cstring>
+#include <format>
+#include <regex>
+#include <sstream>
+#include <string>
+#include <string_view>
+
+namespace ensketch::xstd {
+
+using std::string;
+using std::string_view;
+
+// According to the C++ Core Guidelines,
+// the usage of C-style strings should be clear
+// by using appropriate type definitions.
+// In the future, this might be handled by
+// using the Guideline Support Library (GSL).
+//
+using zstring = char*;
+using czstring = const char*;
+
+}  // namespace ensketch::xstd

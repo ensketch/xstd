@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with `xstd`. If not, see <https://www.gnu.org/licenses/>.
 //
-#include <ensketch/xstd/named_tuple.hpp>
+#include <ensketch/xstd/functional/named_tuple.hpp>
 
 using namespace ensketch::xstd;
 

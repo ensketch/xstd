@@ -16,4 +16,17 @@
 // along with `xstd`. If not, see <https://www.gnu.org/licenses/>.
 //
 #pragma once
-#include <ensketch/xstd/memory/defaults.hpp>
+#include <ensketch/xstd/string/defaults.hpp>
+//
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <locale>
+#include <text_encoding>
+
+#if __has_include(<print>)
+#include <print>
+#endif
+
+namespace ensketch::xstd {}  // namespace ensketch::xstd

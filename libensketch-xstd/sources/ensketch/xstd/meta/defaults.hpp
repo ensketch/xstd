@@ -16,31 +16,67 @@
 // along with `xstd`. If not, see <https://www.gnu.org/licenses/>.
 //
 #pragma once
-#include <ensketch/xstd/meta.hpp>
+#include <ensketch/xstd/defaults.hpp>
+//
+#include <compare>
+#include <concepts>
+#include <functional>
+#include <type_traits>
+#include <typeinfo>
 
 namespace ensketch::xstd {
 
-/// This concepts checks whether two given types are equal.
+namespace meta {
+
+/// These two functions result in a compiler
+/// error but also show the instantiated types.
+/// This approach offers insights into compile-time issues,
+/// so they are useful during development and debugging.
 ///
+template <typename type>
+void breakpoint() = delete;
+//
+template <typename type>
+void breakpoint(type) = delete;
+
 template <typename x, typename y>
-concept generic_identical = meta::equal<x, y>;
+concept equal = std::same_as<x, y>;
+
+}  // namespace meta
 
 /// This concepts checks whether 'x' is reducible to 'y'.
 /// That is, by decaying/reducing 'x' we get 'y'.
 ///
 template <typename x, typename y>
-concept generic_reducible = generic_identical<meta::reduction<x>, y>;
+concept decays_to = std::same_as<std::decay_t<x>, y>;
 
 /// This concepts checks whether a given type is irreducible.
 /// That is, applying a decay/reduction to that type does not change it.
 ///
-template <typename x>
-concept generic_irreducible = generic_reducible<x, x>;
+template <typename type>
+concept non_decayable = decays_to<type, type>;
 
-/// This concepts checks whether a given type is a tag type, i.e. an empty type.
+/// Check whether a given type is not the same as another.
+///
+template <typename type, typename x>
+concept different_to = !std::same_as<type, x>;
+
+/// Check whether a given type is not `void`.
 ///
 template <typename type>
-concept generic_tag = std::is_empty_v<type>;
+concept not_void = different_to<type, void>;
+
+/// This function checks whether two provided values are
+/// strictly equal, meaning their type and values coincide.
+///
+constexpr bool strict_equal(auto x, auto y) noexcept {
+  return false;
+}
+//
+template <typename type>
+constexpr bool strict_equal(type x, type y) noexcept {
+  return x == y;
+}
 
 namespace detail {
 

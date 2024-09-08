@@ -16,8 +16,9 @@
 // along with `xstd`. If not, see <https://www.gnu.org/licenses/>.
 //
 #pragma once
+#include <ensketch/xstd/functional/tuple.hpp>
+//
 #include <ensketch/xstd/meta/name_list.hpp>
-#include <ensketch/xstd/tuple.hpp>
 
 namespace ensketch::xstd {
 
@@ -44,7 +45,7 @@ concept generic_named_tuple =
 ///
 ///
 template <typename T>
-concept generic_reducible_named_tuple = generic_named_tuple<meta::reduction<T>>;
+concept generic_reducible_named_tuple = generic_named_tuple<std::decay_t<T>>;
 
 ///
 ///
@@ -56,7 +57,7 @@ concept generic_unnamed_tuple =
 ///
 template <typename tuple_type>
 concept generic_reducible_unnamed_tuple =
-    generic_unnamed_tuple<meta::reduction<tuple_type>>;
+    generic_unnamed_tuple<std::decay_t<tuple_type>>;
 
 ///
 ///
@@ -82,8 +83,7 @@ concept named_tuple_instance = xstd::detail::is_named_tuple<type>::value;
 ///
 ///
 template <typename T>
-concept reducible_named_tuple_instance =
-    named_tuple_instance<meta::reduction<T>>;
+concept reducible_named_tuple_instance = named_tuple_instance<std::decay_t<T>>;
 
 ///
 ///
@@ -222,7 +222,7 @@ value(reducible_named_tuple_instance auto&& t) noexcept(
 template <meta::string name>
 constexpr decltype(auto) value(
     reducible_named_tuple_instance auto&& t) noexcept {
-  using type = meta::reduction<decltype(t)>;
+  using type = std::decay_t<decltype(t)>;
   constexpr auto names = type::names;
   constexpr auto i = index<name>(names);
   return get<i>(std::forward<decltype(t)>(t).tuple());
@@ -237,7 +237,7 @@ constexpr void for_each(generic_reducible_named_tuple auto&& t,
 }
 
 constexpr void for_each(generic_reducible_named_tuple auto&& x, auto&& f) {
-  using tuple_type = meta::reduction<decltype(x)>;
+  using tuple_type = std::decay_t<decltype(x)>;
   for_each(std::forward<decltype(x)>(x), std::forward<decltype(f)>(f),
            tuple_type::names);
 }

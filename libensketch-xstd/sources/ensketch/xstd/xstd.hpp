@@ -16,9 +16,18 @@
 // along with `xstd`. If not, see <https://www.gnu.org/licenses/>.
 //
 #pragma once
-
+#include <ensketch/xstd/defaults.hpp>
+//
+#include <ensketch/xstd/chrono.hpp>
+#include <ensketch/xstd/concurrency.hpp>
+#include <ensketch/xstd/container.hpp>
+#include <ensketch/xstd/debug.hpp>
+#include <ensketch/xstd/functional.hpp>
 #include <ensketch/xstd/io.hpp>
-#include <ensketch/xstd/match.hpp>
+#include <ensketch/xstd/math.hpp>
+#include <ensketch/xstd/memory.hpp>
 #include <ensketch/xstd/meta.hpp>
-#include <ensketch/xstd/utility.hpp>
+#include <ensketch/xstd/ranges.hpp>
+#include <ensketch/xstd/string.hpp>
+//
 #include <ensketch/xstd/version.hpp>

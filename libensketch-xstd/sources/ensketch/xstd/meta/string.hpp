@@ -16,7 +16,8 @@
 // along with `xstd`. If not, see <https://www.gnu.org/licenses/>.
 //
 #pragma once
-#include <ensketch/xstd/meta/utility.hpp>
+#include <ensketch/xstd/meta/defaults.hpp>
+#include <ensketch/xstd/string/defaults.hpp>
 
 namespace ensketch::xstd::meta {
 

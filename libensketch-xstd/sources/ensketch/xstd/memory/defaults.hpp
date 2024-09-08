@@ -17,3 +17,25 @@
 //
 #pragma once
 #include <ensketch/xstd/memory/defaults.hpp>
+
+namespace ensketch::xstd {
+
+/// With respect to the given offset,
+/// compute the distance to the next offset
+/// that fulfills the given alignment.
+///
+constexpr auto aligned_offset_padding(size_t offset,
+                                      size_t alignment) noexcept -> size_t {
+  return alignment - 1 - ((offset + alignment - 1) % alignment);
+}
+
+/// With respect to the given offset,
+/// compute the next offset
+/// that fulfills the given alignment.
+///
+constexpr auto aligned_offset(size_t offset,
+                              size_t alignment) noexcept -> size_t {
+  return offset + aligned_offset_padding(offset, alignment);
+}
+
+}  // namespace ensketch::xstd

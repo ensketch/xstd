@@ -16,7 +16,7 @@
 // along with `xstd`. If not, see <https://www.gnu.org/licenses/>.
 //
 #pragma once
-#include <tuple>
+#include <ensketch/xstd/functional/defaults.hpp>
 //
 #include <ensketch/xstd/meta/index_list.hpp>
 #include <ensketch/xstd/meta/type_list.hpp>
@@ -59,7 +59,7 @@ concept generic_tuple = all_of(
 ///
 ///
 template <typename T>
-concept generic_reducible_tuple = generic_tuple<meta::reduction<T>>;
+concept generic_reducible_tuple = generic_tuple<std::decay_t<T>>;
 
 ///
 ///
@@ -74,7 +74,7 @@ concept generic_xstd_tuple =
 ///
 template <typename tuple_type>
 concept generic_reducible_xstd_tuple =
-    generic_xstd_tuple<meta::reduction<tuple_type>>;
+    generic_xstd_tuple<std::decay_t<tuple_type>>;
 
 ///
 ///
@@ -101,7 +101,7 @@ constexpr auto for_each(generic_reducible_tuple auto&& tuple,
 }
 //
 constexpr auto for_each(generic_reducible_tuple auto&& tuple, auto&& f) {
-  using tuple_type = meta::reduction<decltype(tuple)>;
+  using tuple_type = std::decay_t<decltype(tuple)>;
   for_each(std::forward<decltype(tuple)>(tuple), std::forward<decltype(f)>(f),
            meta::index_list_from_iota<std::tuple_size<tuple_type>::value>());
 }

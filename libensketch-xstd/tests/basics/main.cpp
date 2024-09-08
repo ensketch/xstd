@@ -19,7 +19,7 @@
 #include <iostream>
 #include <print>
 //
-#include <ensketch/xstd/match.hpp>
+#include <ensketch/xstd/functional/match.hpp>
 #include <ensketch/xstd/xstd.hpp>
 
 using ensketch::xstd::czstring;
@@ -66,7 +66,7 @@ using namespace std;
 
 template <typename... ts>
 struct tuple_detail {
-  static constexpr auto types   = type_list<ts...>{};
+  static constexpr auto types = type_list<ts...>{};
   static constexpr auto indices = index_list_from_iota<size(types)>();
 
   template <size_t index>
@@ -237,7 +237,7 @@ int main() {
   static_assert(as_value<const int&> != as_value<int>);
   static_assert(as_value<const int&> != as_value<const int&&>);
   //
-  int x  = 10;
+  int x = 10;
   int& y = x;
   // ensketch::xstd::meta::print_type<decltype(std::forward<char>(y))>();
   // ensketch::xstd::meta::print_type<decltype(std::forward<char&>(y))>();

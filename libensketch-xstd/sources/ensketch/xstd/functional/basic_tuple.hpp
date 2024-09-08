@@ -16,10 +16,10 @@
 // along with `xstd`. If not, see <https://www.gnu.org/licenses/>.
 //
 #pragma once
-#include <ensketch/xstd/match.hpp>
-#include <ensketch/xstd/memory.hpp>
+#include <ensketch/xstd/functional/match.hpp>
+#include <ensketch/xstd/functional/tuple.hpp>
+#include <ensketch/xstd/memory/defaults.hpp>
 #include <ensketch/xstd/meta/permutation.hpp>
-#include <ensketch/xstd/tuple.hpp>
 
 namespace ensketch::xstd {
 

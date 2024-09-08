@@ -16,4 +16,35 @@
 // along with `xstd`. If not, see <https://www.gnu.org/licenses/>.
 //
 #pragma once
-#include <ensketch/xstd/memory/defaults.hpp>
+#include <ensketch/xstd/ranges/defaults.hpp>
+//
+
+// Sequence Container
+//
+#include <deque>
+#include <forward_list>
+#include <list>
+#include <vector>
+
+// Ordered Associative Container
+//
+#include <map>
+#include <set>
+
+// Unordered Associative Container
+//
+#include <unordered_map>
+#include <unordered_set>
+
+// Container Adaptors
+//
+#include <queue>
+#include <stack>
+#if __has_include(<flat_map>)
+#include <flat_map>
+#endif
+#if __has_include(<flat_set>)
+#include <flat_set>
+#endif
+
+namespace ensketch::xstd {}  // namespace ensketch::xstd
