@@ -23,6 +23,30 @@ class task_queue {
   ///
   using queue_type = std::queue<task_type>;
 
+  /// Default Constructor
+  ///
+  task_queue() noexcept = default;
+
+  /// Copy construction and assignment is forbidden.
+  ///
+  task_queue(const task_queue&) = delete;
+  task_queue& operator=(const task_queue&) = delete;
+
+  /// Move Constructor
+  ///
+  task_queue(task_queue&& other) noexcept {
+    std::scoped_lock lock{other.mutex};
+    tasks.swap(other.tasks);
+  }
+
+  /// Move Assignment
+  ///
+  task_queue& operator=(task_queue&& other) noexcept {
+    std::scoped_lock lock{mutex, other.mutex};
+    tasks.swap(other.tasks);
+    return *this;
+  }
+
   /// Push a task with no return value to the queue
   /// by using fire-and-forget semantic.
   ///
