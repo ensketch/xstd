@@ -17,3 +17,8 @@
 //
 #pragma once
 #include <ensketch/xstd/functional/defaults.hpp>
+//
+#include <ensketch/xstd/functional/match.hpp>
+#include <ensketch/xstd/functional/named_tuple.hpp>
+#include <ensketch/xstd/functional/tuple.hpp>
+#include <ensketch/xstd/functional/variant.hpp>
