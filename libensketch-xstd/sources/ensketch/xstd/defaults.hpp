@@ -43,6 +43,8 @@
 
 namespace ensketch::xstd {
 
+using namespace std::literals;
+
 // Standard Integer Type Aliases
 //
 using int8 = int8_t;
