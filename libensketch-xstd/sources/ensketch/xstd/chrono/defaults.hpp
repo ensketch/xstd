@@ -21,4 +21,16 @@
 #include <chrono>
 #include <ctime>
 
-namespace ensketch::xstd {}  // namespace ensketch::xstd
+namespace ensketch::xstd {
+
+namespace chrono = std::chrono;
+
+using clock = chrono::high_resolution_clock;
+
+template <typename clock, typename duration>
+inline auto elapsed_seconds(chrono::time_point<clock, duration> start,
+                            chrono::time_point<clock, duration> end) noexcept {
+  return chrono::duration<float32>(end - start).count();
+}
+
+}  // namespace ensketch::xstd
