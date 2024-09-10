@@ -34,7 +34,7 @@ namespace ensketch::xstd {
 /// i.e., is movable and invocable with no arguments.
 ///
 template <typename type>
-concept nullary_task = std::movable<type> && std::invocable<type>;
+concept nullary_task = std::invocable<type>;
 
 /// Checks whether the given type is a nullary task and its return type
 /// from its invocation with no arguments coincides with the given return type.
@@ -42,5 +42,20 @@ concept nullary_task = std::movable<type> && std::invocable<type>;
 template <typename type, typename result>
 concept nullary_task_for =
     nullary_task<type> && std::same_as<result, std::invoke_result_t<type>>;
+
+/// `async` acts like `std::async` but uses
+/// `std::launch::async` as launch policy.
+///
+/// "[...] having a function that acts like `std::async`,
+/// but that automatically uses `std::launch::async` as the
+/// launch policy, is a convenient tool to have around, [...]"
+///
+/// from Effective Modern C++ by Scott Meyers
+///
+inline auto async(auto&& f, auto&&... args) {
+  return std::async(std::launch::async,  //
+                    std::forward<decltype(f)>(f),
+                    std::forward<decltype(args)>(args)...);
+}
 
 }  // namespace ensketch::xstd
