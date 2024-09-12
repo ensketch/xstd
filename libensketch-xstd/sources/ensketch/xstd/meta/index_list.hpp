@@ -60,6 +60,13 @@ consteval auto index_list_from_iota() {
 }
 
 ///
+///
+template <size_t size>
+consteval auto indices_less_than() {
+  return index_list_from_iota<size>();
+}
+
+///
 /// Predicates
 ///
 

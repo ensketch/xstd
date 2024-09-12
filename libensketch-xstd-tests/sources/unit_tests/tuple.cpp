@@ -22,14 +22,29 @@
 using namespace ensketch::xstd;
 
 SCENARIO("") {
-  static_assert(generic_tuple<std::tuple<>>);
-  static_assert(generic_tuple<std::tuple<int>>);
-  static_assert(generic_tuple<std::tuple<int, float>>);
+  static_assert(tuple_like<std::tuple<>>);
+  static_assert(tuple_like<std::tuple<int>>);
+  static_assert(tuple_like<std::tuple<int, float>>);
   //
-  static_assert(generic_tuple<std::array<int, 0>>);
-  static_assert(generic_tuple<std::array<int, 5>>);
-  static_assert(generic_tuple<std::array<float, 0>>);
-  static_assert(generic_tuple<std::array<float, 5>>);
+  static_assert(tuple_like<std::tuple<int>&>);
+  static_assert(tuple_like<std::tuple<int, float> const&>);
+  static_assert(tuple_like<std::tuple<int, float>&&>);
+  static_assert(tuple_like<std::tuple<int, float> const&&>);
+  //
+  static_assert(tuple_like<std::array<int, 0>>);
+  static_assert(tuple_like<std::array<int, 5>>);
+  static_assert(tuple_like<std::array<float, 0>>);
+  static_assert(tuple_like<std::array<float, 5>>);
+
+  static_assert(types<std::tuple<>>() == meta::type_list<>{});
+  static_assert(types<std::tuple<int>>() == meta::type_list<int>{});
+  static_assert(types<std::tuple<int&>>() == meta::type_list<int&>{});
+  static_assert(types<std::tuple<int&, float>>() ==
+                meta::type_list<int&, float>{});
+  //
+  static_assert(types<std::array<int, 0>>() == meta::type_list<>{});
+  static_assert(types<std::array<int, 5>>() ==
+                meta::type_list<int, int, int, int, int>{});
 
   static_assert(type_list_from<std::tuple<>>() == meta::type_list<>{});
   static_assert(type_list_from<std::tuple<int>>() == meta::type_list<int>{});
@@ -42,7 +57,34 @@ SCENARIO("") {
                 meta::type_list<int, int, int, int, int>{});
 }
 
+SCENARIO("Tuples: Value Access by `at`") {
+  {
+    std::tuple<int> t{1};
+    CHECK(at<0>(t) == 1);
+  }
+  {
+    std::tuple<int, float> t{-1, 1.23f};
+    CHECK(at<0>(t) == -1);
+    CHECK(at<1>(t) == 1.23f);
+  }
+}
+
 SCENARIO("`for_each` Algorithm for Generic Tuples") {
-  std::tuple<char, int, double> t{};
-  for_each(t, [](auto&&) {});
+  std::tuple t{-1, 'c', 1.23f};
+
+  for_each(t, [](auto& x) { x += 1; });
+
+  CHECK(at<0>(t) == 0);
+  CHECK(at<1>(t) == 'd');
+  CHECK(at<2>(t) == 2.23f);
+
+  for_each(t, []<size_t index>(auto& x) { x -= index; });
+
+  CHECK(at<0>(t) == 0);
+  CHECK(at<1>(t) == 'c');
+  // CHECK(at<2>(t) == 0.23f);
+
+  auto y = tuple_invoke([](auto... x) { return (x + ...); },
+                        std::tuple{-1, 'c', 1.23f});
+  CHECK(y == 99.23f);
 }
