@@ -57,6 +57,39 @@ SCENARIO("") {
                 meta::type_list<int, int, int, int, int>{});
 }
 
+SCENARIO("") {
+  using tuple_type = std::tuple<int, float>;
+  {
+    auto [a, b] = tuple_type{-1, 1.23f};
+    CHECK(a == -1);
+    CHECK(b == 1.23f);
+  }
+
+  struct test_type : tuple_likeness<tuple_type> {
+    using base = tuple_likeness<tuple_type>;
+    using base::base;
+    // using tuple_type::tuple_type;
+    // using tuple_representation = tuple_type;
+  };
+
+  static_assert(tuple_like<test_type>);
+
+  struct test_type2 : test_type, std::tuple<char, int> {
+    using test_type::test_type;
+    using tuple_representation = void;
+    auto& as_tuple() const { return static_cast<const test_type&>(*this); }
+  };
+
+  static_assert(tuple_like<test_type2>);
+
+  {
+    CHECK(get<0>(test_type{-1, 1.23f}) == -1);
+    const auto& [a, b] = test_type2{-1, 1.23f};
+    CHECK(a == -1);
+    CHECK(b == 1.23f);
+  }
+}
+
 SCENARIO("Tuples: Value Access by `at`") {
   {
     std::tuple<int> t{1};

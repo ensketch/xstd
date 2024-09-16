@@ -269,4 +269,71 @@ consteval auto type_list_from() {
 //            meta::index_list_from_iota<std::tuple_size<tuple_type>::value>());
 // }
 
+///
+///
+template <typename type>
+concept tuple_representable =
+    tuple_like<typename type::tuple_representation> &&
+    std::derived_from<type, typename type::tuple_representation>;
+
+template <typename type>
+concept tuple_castable = requires(type value) {
+  { value.as_tuple() } -> tuple_like;
+};
+template <tuple_castable type>
+using tuple_cast_type =
+    std::remove_cvref_t<decltype(std::declval<type>().as_tuple())>;
+///
+template <tuple_like tuple>
+struct tuple_likeness : tuple {
+  using tuple_representation = tuple;
+  using tuple::tuple;
+};
+
+template <size_t index>
+constexpr decltype(auto) get(tuple_castable auto&& t) noexcept(
+    noexcept(get<index>(std::forward<decltype(t)>(t).as_tuple()))) {
+  return get<index>(std::forward<decltype(t)>(t).as_tuple());
+}
+
 }  // namespace ensketch::xstd
+
+namespace std {
+
+template <ensketch::xstd::tuple_castable wrapper>
+struct tuple_size<wrapper> {
+  static constexpr size_t value =
+      std::tuple_size<ensketch::xstd::tuple_cast_type<wrapper>>::value;
+};
+template <size_t index, ensketch::xstd::tuple_castable wrapper>
+struct tuple_element<index, wrapper> {
+  using type = typename std::
+      tuple_element<index, ensketch::xstd::tuple_cast_type<wrapper>>::type;
+};
+
+template <ensketch::xstd::tuple_representable wrapper>
+struct tuple_size<wrapper> {
+  static constexpr size_t value =
+      std::tuple_size<typename wrapper::tuple_representation>::value;
+};
+template <size_t index, ensketch::xstd::tuple_representable wrapper>
+struct tuple_element<index, wrapper> {
+  using type =
+      typename std::tuple_element<index,
+                                  typename wrapper::tuple_representation>::type;
+};
+
+// template <ensketch::xstd::meta::name_list_instance names,
+//           ensketch::xstd::generic_tuple tuple_type>
+// struct tuple_size<ensketch::xstd::named_tuple<names, tuple_type>> {
+//   static constexpr size_t value = std::tuple_size<tuple_type>::value;
+// };
+
+// template <size_t index,
+//           ensketch::xstd::meta::name_list_instance names,
+//           ensketch::xstd::generic_tuple tuple_type>
+// struct tuple_element<index, ensketch::xstd::named_tuple<names, tuple_type>> {
+//   using type = typename std::tuple_element<index, tuple_type>::type;
+// };
+
+}  // namespace std
