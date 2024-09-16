@@ -35,9 +35,7 @@ struct test_list {};
 //
 template <typename type>
 concept test_list_match =
-    matches<type, []<typename... types>(test_list<types...>) {
-      return as_signature<true>;
-    }>;
+    matches<type, []<typename... types>(test_list<types...>) {}>;
 
 /// Test valid and invalid matches for `test_list_match`.
 ///
@@ -181,11 +179,13 @@ static_assert(test_match<float&&>);
 static_assert(test_match<const float&>);
 static_assert(test_match<const float&&>);
 //
-static_assert(!test_match<char>);
-static_assert(!test_match<char&>);
-static_assert(!test_match<char&&>);
-static_assert(!test_match<const char&>);
-static_assert(!test_match<const char&&>);
+// `char` types can be implicitly converted to `int`.
+//
+static_assert(test_match<char>);
+static_assert(test_match<char&>);
+static_assert(test_match<char&&>);
+static_assert(test_match<const char&>);
+static_assert(test_match<const char&&>);
 //
 // Non-Movable Types cannot be matched by value.
 //
@@ -224,6 +224,143 @@ static_assert(matches_all<non_copyable&>);
 static_assert(matches_all<non_copyable&&>);
 static_assert(matches_all<const non_copyable&>);
 static_assert(matches_all<const non_copyable&&>);
+
+/// Test Matching of Derived Classes
+///
+namespace {
+struct A {};
+struct B {};
+struct DA : A {};
+struct DDA : DA {};
+struct dA : private A {};
+struct DADB : A, B {};
+}  // namespace
+///
+///
+template <typename type>
+concept derived_test = matches<type, [](A const&) {}>;
+//
+static_assert(derived_test<A>);
+static_assert(derived_test<A&>);
+static_assert(derived_test<A&&>);
+static_assert(derived_test<const A&>);
+static_assert(derived_test<const A&&>);
+//
+static_assert(!derived_test<B>);
+static_assert(!derived_test<B&>);
+static_assert(!derived_test<B&&>);
+static_assert(!derived_test<const B&>);
+static_assert(!derived_test<const B&&>);
+//
+static_assert(derived_test<DA>);
+static_assert(derived_test<DA&>);
+static_assert(derived_test<DA&&>);
+static_assert(derived_test<const DA&>);
+static_assert(derived_test<const DA&&>);
+//
+static_assert(!derived_test<dA>);
+static_assert(!derived_test<dA&>);
+static_assert(!derived_test<dA&&>);
+static_assert(!derived_test<const dA&>);
+static_assert(!derived_test<const dA&&>);
+//
+static_assert(derived_test<DDA>);
+static_assert(derived_test<DDA&>);
+static_assert(derived_test<DDA&&>);
+static_assert(derived_test<const DDA&>);
+static_assert(derived_test<const DDA&&>);
+//
+static_assert(derived_test<DADB>);
+static_assert(derived_test<DADB&>);
+static_assert(derived_test<DADB&&>);
+static_assert(derived_test<const DADB&>);
+static_assert(derived_test<const DADB&&>);
+
+template <typename type>
+concept strict_test =
+    matches<type,
+            [](auto&& x)
+              requires std::same_as<A, std::remove_cvref_t<decltype(x)>>
+            {}>;
+//
+static_assert(strict_test<A>);
+static_assert(strict_test<A&>);
+static_assert(strict_test<A&&>);
+static_assert(strict_test<const A&>);
+static_assert(strict_test<const A&&>);
+//
+static_assert(!strict_test<B>);
+static_assert(!strict_test<B&>);
+static_assert(!strict_test<B&&>);
+static_assert(!strict_test<const B&>);
+static_assert(!strict_test<const B&&>);
+//
+static_assert(!strict_test<DA>);
+static_assert(!strict_test<DA&>);
+static_assert(!strict_test<DA&&>);
+static_assert(!strict_test<const DA&>);
+static_assert(!strict_test<const DA&&>);
+//
+static_assert(!strict_test<dA>);
+static_assert(!strict_test<dA&>);
+static_assert(!strict_test<dA&&>);
+static_assert(!strict_test<const dA&>);
+static_assert(!strict_test<const dA&&>);
+//
+static_assert(!strict_test<DDA>);
+static_assert(!strict_test<DDA&>);
+static_assert(!strict_test<DDA&&>);
+static_assert(!strict_test<const DDA&>);
+static_assert(!strict_test<const DDA&&>);
+//
+static_assert(!strict_test<DADB>);
+static_assert(!strict_test<DADB&>);
+static_assert(!strict_test<DADB&&>);
+static_assert(!strict_test<const DADB&>);
+static_assert(!strict_test<const DADB&&>);
+
+template <typename type>
+concept naive_test = matches<type,
+                             [](A const&) {},
+                             [](std::derived_from<A> auto const&) {
+                               return as_signature<false>;
+                             }>;
+//
+static_assert(naive_test<A>);
+static_assert(naive_test<A&>);
+static_assert(naive_test<A&&>);
+static_assert(naive_test<const A&>);
+static_assert(naive_test<const A&&>);
+//
+static_assert(!naive_test<B>);
+static_assert(!naive_test<B&>);
+static_assert(!naive_test<B&&>);
+static_assert(!naive_test<const B&>);
+static_assert(!naive_test<const B&&>);
+//
+static_assert(!naive_test<DA>);
+static_assert(!naive_test<DA&>);
+static_assert(!naive_test<DA&&>);
+static_assert(!naive_test<const DA&>);
+static_assert(!naive_test<const DA&&>);
+//
+static_assert(!naive_test<dA>);
+static_assert(!naive_test<dA&>);
+static_assert(!naive_test<dA&&>);
+static_assert(!naive_test<const dA&>);
+static_assert(!naive_test<const dA&&>);
+//
+static_assert(!naive_test<DDA>);
+static_assert(!naive_test<DDA&>);
+static_assert(!naive_test<DDA&&>);
+static_assert(!naive_test<const DDA&>);
+static_assert(!naive_test<const DDA&&>);
+//
+static_assert(!naive_test<DADB>);
+static_assert(!naive_test<DADB&>);
+static_assert(!naive_test<DADB&&>);
+static_assert(!naive_test<const DADB&>);
+static_assert(!naive_test<const DADB&&>);
 
 // enum class error { negative };
 // using result = std::variant<float, error>;

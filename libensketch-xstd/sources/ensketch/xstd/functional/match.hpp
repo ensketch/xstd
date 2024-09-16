@@ -30,6 +30,9 @@ struct match : functors... {
   using functors::operator()...;
 };
 
+template <typename type>
+concept marks_valid_match = std::same_as<type, void> || type::value;
+
 ///
 ///
 /// Must be implemented with `std::invoke_result_t` to use an unevaluated context.
@@ -37,10 +40,8 @@ struct match : functors... {
 ///
 template <typename type, auto... functors>
 concept matches =
-    std::invoke_result_t<decltype(match{
-                             [](auto) { return meta::as_signature<false>; },
-                             functors...}),
-                         type>::value;
+    std::invocable<decltype(match{functors...}), type> &&
+    marks_valid_match<std::invoke_result_t<decltype(match{functors...}), type>>;
 
 /// Check whether the given type is an instance of `match`.
 /// This concept will also match qualified alternatives
