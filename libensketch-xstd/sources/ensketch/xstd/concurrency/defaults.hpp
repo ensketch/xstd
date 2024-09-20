@@ -30,6 +30,21 @@
 
 namespace ensketch::xstd {
 
+/// `async_invoke` acts like `std::async` but uses
+/// `std::launch::async` as launch policy.
+///
+/// "[...] having a function that acts like `std::async`,
+/// but that automatically uses `std::launch::async` as the
+/// launch policy, is a convenient tool to have around, [...]"
+///
+/// from Effective Modern C++ by Scott Meyers
+///
+[[nodiscard]] inline auto async_invoke(auto&& f, auto&&... args) {
+  return std::async(std::launch::async,  //
+                    std::forward<decltype(f)>(f),
+                    std::forward<decltype(args)>(args)...);
+}
+
 /// Checks whether the given type can be used as a task object,
 /// i.e., is movable and invocable with no arguments.
 ///
@@ -43,19 +58,34 @@ template <typename type, typename result>
 concept nullary_task_for =
     nullary_task<type> && std::same_as<result, std::invoke_result_t<type>>;
 
-/// `async` acts like `std::async` but uses
-/// `std::launch::async` as launch policy.
+/// Bind the callable `f` to the arguments `args...` for asynchronous invocation.
+/// Intrinsically, the generated function object will call `std::invoke`.
+/// This function template is a modern and lightweight alternative to `std::bind`.
+/// However, it offers less features and may not work for member functions.
 ///
-/// "[...] having a function that acts like `std::async`,
-/// but that automatically uses `std::launch::async` as the
-/// launch policy, is a convenient tool to have around, [...]"
+[[nodiscard]] constexpr auto task_bind(auto&& f, auto&&... args) {
+  return
+      [f = auto(std::forward<decltype(f)>(f)),
+       ... args = auto(std::forward<decltype(args)>(args))](this auto&& self) {
+        return std::invoke(std::forward_like<decltype(self)>(f),
+                           std::forward_like<decltype(self)>(args)...);
+      };
+}
+
+/// Bind the callable `f` to the arguments `args...` for asynchronous invocation.
+/// Intrinsically, the generated function object will call `std::invoke_r`
+/// to implicitly convert the return value to `result` type.
+/// This function template is a modern and lightweight alternative to `std::bind`.
+/// However, it offers less features and may not work for member functions.
 ///
-/// from Effective Modern C++ by Scott Meyers
-///
-inline auto async(auto&& f, auto&&... args) {
-  return std::async(std::launch::async,  //
-                    std::forward<decltype(f)>(f),
-                    std::forward<decltype(args)>(args)...);
+template <typename result>
+[[nodiscard]] constexpr auto task_bind(auto&& f, auto&&... args) {
+  return [f = auto(std::forward<decltype(f)>(f)),
+          ... args =
+              auto(std::forward<decltype(args)>(args))](this auto&& self) {
+    return std::invoke_r<result>(std::forward_like<decltype(self)>(f),
+                                 std::forward_like<decltype(self)>(args)...);
+  };
 }
 
 }  // namespace ensketch::xstd
