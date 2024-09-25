@@ -44,6 +44,50 @@ concept equal = std::same_as<x, y>;
 
 }  // namespace meta
 
+/// Check whether `type` can be invoked with values of type `params...`.
+///
+template <typename type, typename... params>
+concept invocable = std::is_invocable_v<type, params...>;
+
+/// Check whether `type` can be invoked with values of type
+/// `params...` and is known not to throw any exceptions.
+///
+template <typename type, typename... params>
+concept nothrow_invocable = xstd::invocable<type, params...> &&
+                            std::is_nothrow_invocable_v<type, params...>;
+
+/// Check whether `type` can be invoked with values of type `params...`
+/// and returns a value that is implicitly convertible to `result`.
+///
+template <typename type, typename result, typename... params>
+concept invocable_r = xstd::invocable<type, params...> &&
+                      std::is_invocable_r_v<result, type, params...>;
+
+/// Check whether `type` can be invoked with values of type `params...`,
+/// returns a value that is implicitly convertible to `result`,
+/// and is known not to throw any exceptions.
+///
+template <typename type, typename result, typename... params>
+concept nothrow_invocable_r =
+    std::is_nothrow_invocable_r_v<result, type, params...>;
+
+/// Check whether `type` can be invoked with values of type `params...`
+/// and returns a value whose type is equal to `result`.
+///
+template <typename type, typename result, typename... params>
+concept strict_invocable_r =
+    xstd::invocable<type, params...> &&
+    std::same_as<result, std::invoke_result_t<type, params...>>;
+
+/// Check whether `type` can be invoked with values of type `params...`,
+/// returns a value whose type is equal to `result`,
+/// and is known not to throw any exceptions.
+///
+template <typename type, typename result, typename... params>
+concept strict_nothrow_invocable_r =
+    xstd::nothrow_invocable<type, params...> &&
+    std::same_as<result, std::invoke_result_t<type, params...>>;
+
 /// This concepts checks whether 'x' is reducible to 'y'.
 /// That is, by decaying/reducing 'x' we get 'y'.
 ///
