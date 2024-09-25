@@ -58,34 +58,53 @@ template <typename type, typename result>
 concept nullary_task_for =
     nullary_task<type> && std::same_as<result, std::invoke_result_t<type>>;
 
-/// Bind the callable `f` to the arguments `args...` for asynchronous invocation.
-/// Intrinsically, the generated function object will call `std::invoke`.
-/// This function template is a modern and lightweight alternative to `std::bind`.
-/// However, it offers less features and may not work for member functions.
+/// Bind the callable `f` to the arguments `args...` for postponed invocation.
+/// The returned callable is invocable for `params...` and, intrinsically,
+/// calls `std::invoke` to invoke `f` with instantiated `params...` and `args`.
 ///
-[[nodiscard]] constexpr auto task_bind(auto&& f, auto&&... args) {
-  return
-      [f = auto(std::forward<decltype(f)>(f)),
-       ... args = auto(std::forward<decltype(args)>(args))](this auto&& self) {
+template <typename... params, typename... bindings>
+[[nodiscard]] constexpr auto task_bind(
+    std::invocable<params..., bindings...> auto&& f,
+    bindings&&... args) -> std::invocable<params...> auto {
+  // Return a lambda expression that captures `f` and `args` by decay-copy.
+  // This is important for reference-like function arguments that might
+  // have already been outlived when function execution is postponed.
+  return [f = auto(std::forward<decltype(f)>(f)),
+          ... args = auto(std::forward<bindings>(args))]
+      // For proper forwarding, the lambda's parameters include the self reference.
+      // All other parameters are given by the params directly.
+      (this auto&& self, params&&... p) {
+        // The implementation only uses `std::invoke` to
+        // invoke the function with all given arguments.
         return std::invoke(std::forward_like<decltype(self)>(f),
+                           std::forward<params>(p)...,
                            std::forward_like<decltype(self)>(args)...);
       };
 }
 
-/// Bind the callable `f` to the arguments `args...` for asynchronous invocation.
-/// Intrinsically, the generated function object will call `std::invoke_r`
-/// to implicitly convert the return value to `result` type.
-/// This function template is a modern and lightweight alternative to `std::bind`.
-/// However, it offers less features and may not work for member functions.
+/// Bind the callable `f` to the arguments `args...` for postponed invocation.
+/// The returned callable is invocable for `params...` and, intrinsically,
+/// calls `std::invoke_r` to invoke `f` with instantiated `params...` and `args`.
+/// The return value is implicitly converted to `result` type.
 ///
-template <typename result>
-[[nodiscard]] constexpr auto task_bind(auto&& f, auto&&... args) {
+template <typename result, typename... params, typename... bindings>
+[[nodiscard]] constexpr auto task_bind_r(
+    xstd::invocable_r<result, params..., bindings...> auto&& f,
+    bindings&&... args) -> xstd::strict_invocable_r<result, params...> auto {
+  // Return a lambda expression that decay-copy captures `f` and `args`.
+  // This is important for postponed execution of the function
+  // when function arguments might already be outlived.
   return [f = auto(std::forward<decltype(f)>(f)),
-          ... args =
-              auto(std::forward<decltype(args)>(args))](this auto&& self) {
-    return std::invoke_r<result>(std::forward_like<decltype(self)>(f),
-                                 std::forward_like<decltype(self)>(args)...);
-  };
+          ... args = auto(std::forward<bindings>(args))]
+      // For proper forwarding, the lambda's parameters include the self reference.
+      // All other parameters are given by the params directly.
+      (this auto&& self, params&&... p) {
+        // The implementation only uses `std::invoke_r` to invoke the function
+        // with all given arguments and implicitly convert it to `result`.
+        return std::invoke_r<result>(
+            std::forward_like<decltype(self)>(f), std::forward<params>(p)...,
+            std::forward_like<decltype(self)>(args)...);
+      };
 }
 
 }  // namespace ensketch::xstd
