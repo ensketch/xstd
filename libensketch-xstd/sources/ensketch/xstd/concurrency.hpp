@@ -16,5 +16,7 @@
 // along with `xstd`. If not, see <https://www.gnu.org/licenses/>.
 //
 #pragma once
+#include <ensketch/xstd/concurrency/basic_task_queue.hpp>
 #include <ensketch/xstd/concurrency/defaults.hpp>
 #include <ensketch/xstd/concurrency/task_queue.hpp>
+#include <ensketch/xstd/concurrency/task_thread.hpp>
