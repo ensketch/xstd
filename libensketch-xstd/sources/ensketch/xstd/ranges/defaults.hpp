@@ -24,5 +24,7 @@
 #endif
 #include <ranges>
 #include <span>
+//
+#include <generator>
 
 namespace ensketch::xstd {}  // namespace ensketch::xstd
