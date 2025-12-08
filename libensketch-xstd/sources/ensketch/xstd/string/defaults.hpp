@@ -88,6 +88,6 @@ template <typename type>
 concept stable_string_range =
     string_range<type> &&
     (std::ranges::borrowed_range<std::ranges::range_value_t<type>> ||
-     std::is_reference_v<std::ranges::range_reference_t<type>>);
+     std::is_lvalue_reference_v<std::ranges::range_reference_t<type>>);
 
 }  // namespace ensketch::xstd

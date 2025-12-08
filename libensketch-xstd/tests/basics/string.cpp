@@ -20,6 +20,8 @@
 
 using namespace ensketch::xstd;
 
+namespace {
+
 // String-Likes
 //
 static_assert(string_like<string>);
@@ -39,10 +41,20 @@ static_assert(not string_like<std::tuple<char, char, char>>);
 
 // String Ranges
 //
-//
 static_assert(stable_string_range<std::vector<std::string>>);
+static_assert(stable_string_range<std::vector<std::string_view>>);
 static_assert(stable_string_range<std::list<std::string>>);
 static_assert(stable_string_range<std::set<std::string>>);
 //
 static_assert(string_range<std::generator<std::string>>);
-// static_assert(not stable_string_range<std::generator<std::string>>);
+static_assert(not stable_string_range<std::generator<std::string>>);
+static_assert(stable_string_range<std::generator<std::string const&>>);
+static_assert(stable_string_range<std::generator<std::string_view>>);
+//
+using transform_view_test =
+    decltype(std::declval<std::vector<int>&>() |
+             std::views::transform([](int i) { return std::to_string(i); }));
+static_assert(string_range<transform_view_test>);
+static_assert(not stable_string_range<transform_view_test>);
+
+}  // namespace
