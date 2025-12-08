@@ -28,16 +28,71 @@ namespace ensketch::xstd {
 
 namespace meta {
 
-/// These two functions result in a compiler
-/// error but also show the instantiated types.
-/// This approach offers insights into compile-time issues,
-/// so they are useful during development and debugging.
+/// Forces a compile-time error that allows
+/// to inspect a single explicitly given type.
 ///
 template <typename type>
-void breakpoint() = delete;
-//
+void breakpoint() = delete (
+    "Compilation stopped as requested. "
+    "Remove to successfully compile.");
+
+/// Forces a compile-time error that allows
+/// to inspect multiple explicitly given types.
+///
+template <typename... types>
+  requires(sizeof...(types) > 1)
+void breakpoint() = delete (
+    "Compilation stopped as requested. "
+    "Remove to successfully compile.");
+
+/// Forces a compile-time error that allows to inspect
+/// the decayed type of a single given argument.
+/// No abbreviated function template is used to improve error message.
+///
 template <typename type>
-void breakpoint(type) = delete;
+void breakpoint(type) = delete (
+    "Compilation stopped as requested. "
+    "Remove to successfully compile.");
+
+/// Forces a compile-time error that allows to inspect
+/// the decayed type of multiple given arguments.
+/// No abbreviated function template is used to improve error message.
+///
+template <typename... types>
+  requires(sizeof...(types) > 1)
+void breakpoint(types...) = delete (
+    "Compilation stopped as requested. "
+    "Remove to successfully compile.");
+
+/// Generates a compiler warning that allows
+/// to inspect a single explicitly given type.
+///
+template <typename type>
+[[deprecated("Warning generated as requested.")]]
+void watchpoint() {}
+
+/// Generates a compiler warning that allows
+/// to inspect multiple explicitly given types.
+///
+template <typename... types>
+  requires(sizeof...(types) > 1)
+[[deprecated("Warning generated as requested.")]]
+void watchpoint() {}
+
+/// Generates a compiler warning that allows to inspect
+/// the decayed type of a single given argument.
+///
+template <typename type>
+[[deprecated("Warning generated as requested.")]]
+void watchpoint(type) {}
+
+/// Generates a compiler warning that allows to inspect
+/// the decayed type of multiple given arguments.
+///
+template <typename... types>
+  requires(sizeof...(types) > 1)
+[[deprecated("Warning generated as requested.")]]
+void watchpoint(types...) {}
 
 template <typename x, typename y>
 concept equal = std::same_as<x, y>;

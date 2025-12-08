@@ -17,4 +17,14 @@
 //
 #include <ensketch/xstd/xstd.hpp>
 
-int main() {}
+int main() {
+  using namespace ensketch::xstd;
+  // meta::breakpoint<int>();
+  // meta::breakpoint<int, f32, u32>();
+  // meta::breakpoint(pi, 1.23f64);
+  // meta::breakpoint(pi);
+  // meta::watchpoint<int>();
+  // meta::watchpoint<int, u32, f64>();
+  // meta::watchpoint(pi);
+  // meta::watchpoint(pi, -1, 'c');
+}
