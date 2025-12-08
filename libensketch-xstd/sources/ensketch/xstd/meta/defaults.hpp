@@ -165,6 +165,11 @@ concept different_to = !std::same_as<type, x>;
 template <typename type>
 concept not_void = different_to<type, void>;
 
+/// Check whether a type is exactly one of the given types.
+///
+template <typename type, typename... types>
+concept one_of = (std::same_as<type, types> || ...);
+
 /// This function checks whether two provided values are
 /// strictly equal, meaning their type and values coincide.
 ///
