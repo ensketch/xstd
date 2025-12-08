@@ -20,27 +20,22 @@
 
 namespace ensketch::xstd {
 
-/// Return the content of a file given by its path as a standard `string` object.
+/// Reads the entire content of a file and returns it as a `std::string`.
+/// This function does not throw and failures in opening or reading the
+/// file, or determining its size, are reported via an empty optional.
+/// Memory allocation failures result in program termination.
 ///
-inline auto string_from_file(const std::filesystem::path& path) -> string {
-  using namespace std;
-
-  // We will read all characters as block and open the file in binary mode.
+inline auto string_from_file(std::filesystem::path const& path) noexcept
+    -> std::optional<std::string> {
+  // Open the file in binary mode and read all characters as block.
   // Make sure to jump to its end for directly reading its size.
-  ifstream file{path, ios::binary | ios::ate};
-  if (!file)
-    throw runtime_error(format("Failed to open file '{}'.", path.string()));
-
-  // Read the file's size.
-  auto size = file.tellg();
-
-  // Prepare the result string with a sufficiently large buffer.
-  string result(size, '\0');
-
-  // Go back to the start and read all characters at once in a block.
-  file.seekg(0);
-  file.read(result.data(), size);
-
+  std::ifstream file{path, std::ios::binary | std::ios::ate};
+  if (!file) return {};
+  const auto size = file.tellg();
+  if (size < 0) return {};
+  std::string result(size, '\0');
+  file.seekg(0);  // Go back to the start.
+  if (not file.read(result.data(), size)) return {};
   return result;
 };
 
