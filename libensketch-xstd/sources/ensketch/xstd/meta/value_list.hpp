@@ -491,6 +491,9 @@ consteval auto transform(value_list<values...>,
                          value_transformer_for<values...> auto f) {
   return value_list<f.template operator()<values>()...> {};
 }
+consteval auto transform(value_list<>, auto f) {
+  return value_list<>{};
+}
 
 ///
 /// Algorithms for Code Generation
