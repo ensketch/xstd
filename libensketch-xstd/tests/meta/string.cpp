@@ -38,9 +38,12 @@ static_assert(prefix_match_index("help"_xs, "help"_xs) == 4);
 // static_assert(!is_string(1.0f));
 // static_assert(!is_string('a'));
 
-void check() {
-  for (auto c : "abc"_xs) print("c = {}", c);
-  const auto v = view_from("xyz"_xs);
-}
+// void check() {
+//   for (auto c : "abc"_xs) print("c = {}", c);
+//   const auto v = static_cast<std::string_view>("xyz"_xs);
+// }
 
-int main() {}
+int main() {
+  assert(std::format("{}", "xyz"_xs) == "xyz");
+  assert(static_cast<std::string_view>("abc"_xs) == "abc");
+}

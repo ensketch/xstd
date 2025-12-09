@@ -45,17 +45,11 @@ struct string {
     for (size_t i = 0; i < N; ++i) _data[i] = str[i];
   }
 
-  /// Return `string_view` to string content.
-  ///
-  constexpr auto view() const noexcept -> std::string_view {
+  // Implicit Conversion to `std::string_view`
+  //
+  constexpr operator std::string_view() const noexcept {
     return {data(), size()};
   }
-
-  // Enable implicit conversion to C strings.
-  //
-  constexpr operator zstring() noexcept { return _data; }
-  constexpr operator czstring() const noexcept { return _data; }
-  constexpr operator std::string_view() const noexcept { return view(); }
 
   /// Get index-based access to the characters.
   ///
@@ -121,13 +115,6 @@ constexpr auto operator""_xs() noexcept {
   return str;
 }
 
-/// Return `string_view` to string content.
-///
-template <size_t N>
-constexpr auto view_from(const string<N>& str) noexcept -> std::string_view {
-  return str.view();
-}
-
 // Append characters to static string should be compile-time enabled.
 //
 template <size_t N>
@@ -186,8 +173,8 @@ constexpr auto suffix(string<N> str) noexcept  //
 /// of the two given strings are not equal.
 ///
 template <size_t N, size_t M>
-constexpr auto prefix_match_index(string<N> str1,
-                                  string<M> str2) noexcept -> size_t {
+constexpr auto prefix_match_index(string<N> str1, string<M> str2) noexcept
+    -> size_t {
   constexpr auto bound = ((N < M) ? N : M) - 1;
   for (size_t i = 0; i < bound; ++i)
     if (str1[i] != str2[i]) return i;
@@ -205,7 +192,7 @@ constexpr auto tail(string<N> str) noexcept {
 ///
 template <size_t n>
 inline auto operator<<(std::ostream& os, string<n> str) -> std::ostream& {
-  return os << view_from(str);
+  return os << static_cast<std::string_view>(str);
 }
 
 }  // namespace ensketch::xstd::meta
@@ -219,8 +206,8 @@ struct std::formatter<ensketch::xstd::meta::string<n>, char> {
     return ctx.begin();
   }
   template <class context>
-  auto format(ensketch::xstd::meta::string<n> str,
-              context& ctx) const -> context::iterator {
-    return ranges::copy(view_from(str), ctx.out()).out;
+  auto format(ensketch::xstd::meta::string<n> str, context& ctx) const
+      -> context::iterator {
+    return ranges::copy(static_cast<std::string_view>(str), ctx.out()).out;
   }
 };
