@@ -17,9 +17,11 @@
 //
 #include <doctest/doctest.h>
 //
-#include <ensketch/xstd/io/string_from_file.hpp>
+#include <ensketch/xstd/io.hpp>
 
 using namespace ensketch::xstd;
+
+namespace {
 
 void string_from_file_test(std::filesystem::path const& path,
                            std::string_view str) {
@@ -36,7 +38,9 @@ void string_from_file_test(std::filesystem::path const& path,
   REQUIRE(result.value() == str);
 }
 
-SCENARIO("`string_from_file`") {
+}  // namespace
+
+SCENARIO("xstd::string_from_file") {
   CHECK(not string_from_file("invalid"));
   string_from_file_test("empty.txt", "");
   string_from_file_test("test.txt", "Hello, World!");

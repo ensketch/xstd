@@ -17,3 +17,4 @@
 //
 #pragma once
 #include <ensketch/xstd/string/defaults.hpp>
+#include <ensketch/xstd/string/lines_view.hpp>

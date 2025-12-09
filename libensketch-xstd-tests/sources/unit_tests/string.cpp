@@ -15,26 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with `xstd`. If not, see <https://www.gnu.org/licenses/>.
 //
-#pragma once
-#include <ensketch/xstd/string.hpp>
+#include <doctest/doctest.h>
 //
-#include <filesystem>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <locale>
-#include <text_encoding>
+#include <ensketch/xstd/string.hpp>
 
-#if __has_include(<print>)
-#include <print>
-#endif
+using namespace ensketch;
 
-namespace ensketch::xstd {
-
-/// Print each string in a string range on its own line.
-///
-inline void print(string_range auto&& lines) {
-  for (auto&& str : lines) std::println("{}", std::forward<decltype(str)>(str));
+SCENARIO("xstd::views::lines") {
+  std::string str{};
+  for (auto line :
+       xstd::views::lines("Hello\nWorld\nThis is\nC++20 coroutines"))
+    str += std::format("> {};", line);
+  CHECK(str == "> Hello;> World;> This is;> C++20 coroutines;");
 }
-
-}  // namespace ensketch::xstd
