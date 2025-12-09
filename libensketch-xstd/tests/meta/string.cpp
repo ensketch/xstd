@@ -22,6 +22,10 @@
 using namespace std;
 using namespace ensketch::xstd::meta;
 
+static_assert(std::ranges::contiguous_range<decltype(""_xs)>);
+static_assert(std::ranges::contiguous_range<decltype("help"_xs)>);
+static_assert(std::ranges::contiguous_range<decltype("with space"_xs)>);
+
 static_assert(substring<2, 4>("--help"_xs) == "help"_xs);
 static_assert(prefix<2>("--help"_xs) == "--"_xs);
 static_assert(tail<2>("--help"_xs) == "help"_xs);
